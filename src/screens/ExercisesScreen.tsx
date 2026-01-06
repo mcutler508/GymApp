@@ -452,13 +452,15 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   lastWeightText: {
-    color: Colors.secondary,
+    color: Colors.primary,
     marginTop: Spacing.xs,
     fontWeight: 'bold',
   },
@@ -480,10 +482,10 @@ const styles = StyleSheet.create({
     bottom: Spacing.md,
   },
   modalContainer: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.card,
     padding: Spacing.lg,
     margin: Spacing.lg,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   modalTitle: {
     marginBottom: Spacing.lg,

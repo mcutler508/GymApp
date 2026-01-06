@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, BackHandler } from 'react-native';
 import { Text, Card, IconButton, ProgressBar, Dialog, TextInput, Button, Portal } from 'react-native-paper';
 import { Colors, Spacing } from '../constants/theme';
 import { Routine, RoutineExercise, DifficultyRating } from '../types';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import WorkoutTimer from '../components/WorkoutTimer';
 
 type ActiveRoutineWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveRoutineWorkout'>;
 type ActiveRoutineWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveRoutineWorkout'>;
@@ -29,10 +30,42 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   const [weightInput, setWeightInput] = useState('');
   const [exerciseToAdjust, setExerciseToAdjust] = useState<RoutineExercise | null>(null);
   const [sessionId] = useState(`routine-session-${Date.now()}`);
+  const [sessionStartTime] = useState(Date.now());
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const [currentExerciseStartTime, setCurrentExerciseStartTime] = useState<number | null>(null);
+  const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null);
 
   useEffect(() => {
     loadRoutine();
   }, []);
+
+  // Handle timer cancellation when difficulty grid is closed without selection
+  useEffect(() => {
+    if (!showDifficultyGrid && currentExerciseStartTime) {
+      // User closed difficulty grid without selecting difficulty - clear timer
+      setCurrentExerciseStartTime(null);
+      setCurrentExerciseId(null);
+    }
+  }, [showDifficultyGrid, currentExerciseStartTime]);
+
+  // Handle back button press to clear timer if on difficulty grid
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (showDifficultyGrid && currentExerciseStartTime) {
+          // Clear timer if user presses back on difficulty grid
+          setCurrentExerciseStartTime(null);
+          setCurrentExerciseId(null);
+          setShowDifficultyGrid(false);
+          return true; // Prevent default back action
+        }
+        return false; // Allow default back action
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [showDifficultyGrid, currentExerciseStartTime])
+  );
 
   const loadRoutine = async () => {
     try {
@@ -55,6 +88,8 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
       return;
     }
     setSelectedExercise(exercise);
+    setCurrentExerciseStartTime(Date.now());
+    setCurrentExerciseId(exercise.id);
     setShowDifficultyGrid(true);
   };
 
@@ -128,13 +163,35 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
     const currentWeight = selectedExercise.currentWeight || selectedExercise.startingWeight || 0;
     const newWeight = calculateNextWeight(currentWeight, difficulty);
 
+    // Calculate exercise duration
+    const endTime = Date.now();
+    const exerciseDuration = currentExerciseStartTime 
+      ? Math.floor((endTime - currentExerciseStartTime) / 1000)
+      : undefined;
+    const exerciseStartTimeISO = currentExerciseStartTime 
+      ? new Date(currentExerciseStartTime).toISOString()
+      : undefined;
+    const exerciseEndTimeISO = new Date(endTime).toISOString();
+
     // Mark exercise as completed
     const updatedCompleted = new Set(completedExercises);
     updatedCompleted.add(selectedExercise.id);
     setCompletedExercises(updatedCompleted);
 
-    // Save workout log
-    await saveWorkoutLog(selectedExercise, currentWeight, difficulty, newWeight);
+    // Save workout log with duration
+    await saveWorkoutLog(
+      selectedExercise, 
+      currentWeight, 
+      difficulty, 
+      newWeight,
+      exerciseDuration,
+      exerciseStartTimeISO,
+      exerciseEndTimeISO
+    );
+
+    // Clear timer state
+    setCurrentExerciseStartTime(null);
+    setCurrentExerciseId(null);
 
     // Update the routine with new weight and last performance
     const updatedExercises = routine.exercises.map((ex) =>
@@ -173,6 +230,32 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
 
     // Check if all exercises are completed
     if (updatedCompleted.size === routine.exercises.length) {
+      // Calculate session duration
+      const sessionEndTime = Date.now();
+      const totalSessionDuration = Math.floor((sessionEndTime - sessionStartTime) / 1000);
+
+      // Update all logs in this session with session timing
+      try {
+        const logsString = await AsyncStorage.getItem('workoutLogs');
+        if (logsString) {
+          const logs = JSON.parse(logsString);
+          const updatedLogs = logs.map((log: any) => {
+            if (log.sessionId === sessionId) {
+              return {
+                ...log,
+                sessionStartTime: new Date(sessionStartTime).toISOString(),
+                sessionEndTime: new Date(sessionEndTime).toISOString(),
+                sessionDuration: totalSessionDuration,
+              };
+            }
+            return log;
+          });
+          await AsyncStorage.setItem('workoutLogs', JSON.stringify(updatedLogs));
+        }
+      } catch (error) {
+        console.error('Error updating session timing:', error);
+      }
+
       // Mark routine as complete
       try {
         const stored = await AsyncStorage.getItem(ROUTINES_STORAGE_KEY);
@@ -201,7 +284,10 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
     exercise: RoutineExercise,
     weight: number,
     difficulty: DifficultyRating,
-    nextWeight: number
+    nextWeight: number,
+    duration?: number,
+    startTime?: string,
+    endTime?: string
   ) => {
     try {
       // Create a workout log entry (routine workouts don't have detailed set info)
@@ -211,6 +297,9 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
         sets: [{ weight, reps: 0 }], // Placeholder since routine doesn't track sets
         difficulty,
         nextWeight,
+        duration,
+        startTime,
+        endTime,
       };
 
       // Load existing workout logs array
@@ -224,6 +313,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
         routineId,
         routineName: routine?.name,
         exerciseId: exercise.exerciseId,
+        muscleGroup: exercise.muscleGroup,
         ...workoutLog,
       };
       logs.push(newLog);
@@ -263,9 +353,29 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
           <Text variant="titleMedium" style={styles.exerciseName}>
             {selectedExercise.exerciseName}
           </Text>
+          
+          {currentExerciseStartTime && (
+            <WorkoutTimer 
+              startTime={currentExerciseStartTime} 
+              onDurationChange={() => {}} 
+            />
+          )}
+          
           <Text variant="bodyLarge" style={styles.subtitle}>
             Rate the difficulty to adjust your next weight
           </Text>
+
+          <Button
+            mode="outlined"
+            onPress={() => {
+              setShowDifficultyGrid(false);
+              setCurrentExerciseStartTime(null);
+              setCurrentExerciseId(null);
+            }}
+            style={styles.backButton}
+          >
+            Back to Workout
+          </Button>
 
           <View style={styles.difficultyGrid}>
             <View style={styles.difficultyRow}>
@@ -348,6 +458,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   return (
     <View style={styles.container}>
       <View style={styles.progressContainer}>
+        <WorkoutTimer startTime={sessionStartTime} onDurationChange={setSessionDuration} />
         <Text variant="bodySmall" style={styles.progressText}>
           {completedExercises.size} of {routine.exercises.length} exercises complete
         </Text>
@@ -472,6 +583,7 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: Spacing.xs,
     textAlign: 'center',
+    color: Colors.text,
   },
   exerciseName: {
     textAlign: 'center',
@@ -491,10 +603,14 @@ const styles = StyleSheet.create({
   exerciseCard: {
     marginBottom: Spacing.md,
     elevation: 2,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   completedCard: {
-    backgroundColor: '#f0f0f0',
-    opacity: 0.7,
+    backgroundColor: Colors.card,
+    opacity: 0.6,
+    borderWidth: 2,
+    borderColor: Colors.primary,
   },
   exerciseRow: {
     flexDirection: 'row',
@@ -533,6 +649,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: Spacing.xs,
     elevation: 4,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   difficultyContent: {
     alignItems: 'center',
@@ -545,22 +663,31 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
+    color: Colors.text,
   },
   difficultyDesc: {
     color: Colors.textSecondary,
     fontSize: 12,
   },
   easyCard: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: Colors.card,
+    borderWidth: 2,
+    borderColor: Colors.primary,
   },
   normalCard: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   hardCard: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   expertCard: {
-    backgroundColor: '#FCE4EC',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   dialogSubtitle: {
     marginBottom: Spacing.md,
@@ -568,5 +695,9 @@ const styles = StyleSheet.create({
   },
   weightInput: {
     marginTop: Spacing.sm,
+  },
+  backButton: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
   },
 });

@@ -323,6 +323,8 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   cardHeader: {
     flexDirection: 'row',

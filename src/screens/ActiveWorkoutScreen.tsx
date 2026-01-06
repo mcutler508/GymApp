@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, Card, IconButton } from 'react-native-paper';
 import { Colors, Spacing } from '../constants/theme';
@@ -7,6 +7,7 @@ import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import WorkoutTimer from '../components/WorkoutTimer';
 
 type ActiveWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveWorkout'>;
 type ActiveWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveWorkout'>;
@@ -28,6 +29,8 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   const [currentWeight, setCurrentWeight] = useState(lastWeight?.toString() || '');
   const [currentReps, setCurrentReps] = useState('');
   const [showDifficultyGrid, setShowDifficultyGrid] = useState(false);
+  const [startTime] = useState(Date.now());
+  const [duration, setDuration] = useState(0);
 
   const addSet = () => {
     if (!currentWeight || !currentReps) {
@@ -62,6 +65,10 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
     const lastWeightValue = lastWeight || parseFloat(currentWeight) || 0;
     const newWeight = calculateNextWeight(lastWeightValue, difficulty);
 
+    // Calculate duration
+    const endTime = Date.now();
+    const workoutDuration = Math.floor((endTime - startTime) / 1000); // duration in seconds
+
     // Save workout log
     const workoutLog = {
       exerciseName,
@@ -69,6 +76,9 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
       sets,
       difficulty,
       nextWeight: newWeight,
+      startTime: new Date(startTime).toISOString(),
+      endTime: new Date(endTime).toISOString(),
+      duration: workoutDuration,
     };
 
     // Save to local storage
@@ -105,6 +115,21 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 
   const saveWorkoutHistory = async (workoutLog: any) => {
     try {
+      // Look up muscle group from exercises
+      let muscleGroup: string = 'other';
+      try {
+        const exercisesString = await AsyncStorage.getItem('exercises');
+        if (exercisesString) {
+          const exercises = JSON.parse(exercisesString);
+          const exercise = exercises.find((ex: any) => ex.id === exerciseId);
+          if (exercise && exercise.muscle_group) {
+            muscleGroup = exercise.muscle_group;
+          }
+        }
+      } catch (error) {
+        console.error('Error looking up muscle group:', error);
+      }
+
       // Load existing workout logs array
       const logsString = await AsyncStorage.getItem('workoutLogs');
       const logs = logsString ? JSON.parse(logsString) : [];
@@ -133,6 +158,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
         id: Date.now().toString(),
         sessionId,
         exerciseId,
+        muscleGroup,
         ...workoutLog,
       };
       logs.push(newLog);
@@ -252,6 +278,8 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <WorkoutTimer startTime={startTime} onDurationChange={setDuration} />
+
         <Text variant="headlineMedium" style={styles.title}>
           {exerciseName}
         </Text>
@@ -339,6 +367,7 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: Spacing.sm,
     textAlign: 'center',
+    color: Colors.text,
   },
   subtitle: {
     textAlign: 'center',
@@ -347,12 +376,14 @@ const styles = StyleSheet.create({
   },
   lastWeight: {
     textAlign: 'center',
-    color: Colors.secondary,
+    color: Colors.primary,
     marginBottom: Spacing.md,
     fontWeight: 'bold',
   },
   inputCard: {
     marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   inputTitle: {
     marginBottom: Spacing.md,
@@ -365,6 +396,8 @@ const styles = StyleSheet.create({
   },
   setsCard: {
     marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   setsTitle: {
     marginBottom: Spacing.md,
@@ -393,6 +426,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: Spacing.xs,
     elevation: 4,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   difficultyContent: {
     alignItems: 'center',
@@ -405,22 +440,31 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
+    color: Colors.text,
   },
   difficultyDesc: {
     color: Colors.textSecondary,
     fontSize: 12,
   },
   easyCard: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: Colors.card,
+    borderWidth: 2,
+    borderColor: Colors.primary,
   },
   normalCard: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   hardCard: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   expertCard: {
-    backgroundColor: '#FCE4EC',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   backButton: {
     marginTop: Spacing.md,

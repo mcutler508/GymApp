@@ -1,27 +1,36 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { Text, Card } from 'react-native-paper';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { Colors, Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { formatDuration } from '../utils/timeFormat';
+import TimeBreakdownModal from '../components/TimeBreakdownModal';
 
 const screenWidth = Dimensions.get('window').width;
 
 const chartConfig = {
-  backgroundColor: Colors.primary,
-  backgroundGradientFrom: Colors.primary,
-  backgroundGradientTo: Colors.primaryDark,
+  backgroundColor: Colors.card,
+  backgroundGradientFrom: Colors.card,
+  backgroundGradientTo: Colors.card,
   decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  color: (opacity = 1) => Colors.primary,
   labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  strokeWidth: 2,
   style: {
     borderRadius: 16,
   },
   propsForDots: {
     r: '6',
     strokeWidth: '2',
-    stroke: Colors.secondary,
+    stroke: Colors.primary,
+    fill: Colors.primary,
+  },
+  propsForBackgroundLines: {
+    strokeDasharray: '',
+    stroke: Colors.border,
+    strokeWidth: 1,
   },
 };
 
@@ -33,6 +42,14 @@ interface WorkoutLog {
   sets: Array<{ weight: number; reps: number }>;
   difficulty: string;
   nextWeight: number;
+  startTime?: string;
+  endTime?: string;
+  duration?: number;
+  sessionStartTime?: string;
+  sessionEndTime?: string;
+  sessionDuration?: number;
+  sessionId?: string;
+  muscleGroup?: string;
 }
 
 interface Stats {
@@ -40,6 +57,12 @@ interface Stats {
   workoutsThisWeek: number;
   workoutsThisMonth: number;
   totalVolume: number;
+  totalWorkoutTime: number;
+  averageWorkoutTime: number;
+  longestWorkout: number;
+  shortestWorkout: number;
+  totalTimeThisWeek: number;
+  totalTimeThisMonth: number;
 }
 
 interface PersonalRecord {
@@ -53,6 +76,12 @@ export default function StatisticsScreen() {
     workoutsThisWeek: 0,
     workoutsThisMonth: 0,
     totalVolume: 0,
+    totalWorkoutTime: 0,
+    averageWorkoutTime: 0,
+    longestWorkout: 0,
+    shortestWorkout: 0,
+    totalTimeThisWeek: 0,
+    totalTimeThisMonth: 0,
   });
   const [personalRecords, setPersonalRecords] = useState<PersonalRecord[]>([]);
   const [weeklyData, setWeeklyData] = useState({
@@ -63,15 +92,21 @@ export default function StatisticsScreen() {
     labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
     datasets: [{ data: [0, 0, 0, 0] }],
   });
+  const [allLogs, setAllLogs] = useState<WorkoutLog[]>([]);
+  const [breakdownModalVisible, setBreakdownModalVisible] = useState(false);
+  const [breakdownFilterType, setBreakdownFilterType] = useState<'total' | 'week' | 'month'>('total');
+  const [breakdownTitle, setBreakdownTitle] = useState('Time Breakdown');
 
   const calculateStats = useCallback(async () => {
     try {
       const logsString = await AsyncStorage.getItem('workoutLogs');
       if (!logsString) {
+        setAllLogs([]);
         return;
       }
 
       const logs: WorkoutLog[] = JSON.parse(logsString);
+      setAllLogs(logs);
       const now = new Date();
       const startOfWeek = new Date(now);
       startOfWeek.setDate(now.getDate() - now.getDay());
@@ -84,8 +119,16 @@ export default function StatisticsScreen() {
       let workoutsThisMonth = 0;
       let totalVolume = 0;
 
+      // Time-based stats
+      let totalWorkoutTime = 0;
+      let totalTimeThisWeek = 0;
+      let totalTimeThisMonth = 0;
+      const workoutDurations: number[] = [];
+      const sessionDurations = new Map<string, number>(); // Track unique sessions
+
       // Weekly workout counts
       const weekdayCounts = [0, 0, 0, 0, 0, 0, 0];
+      const weeklyTimeData = [0, 0, 0, 0, 0, 0, 0]; // Time per day of week
 
       // Monthly volume by week
       const weeklyVolumes = [0, 0, 0, 0];
@@ -102,6 +145,48 @@ export default function StatisticsScreen() {
           0
         );
         totalVolume += workoutVolume;
+
+        // Calculate time-based stats
+        // Use sessionDuration if available (routine workouts), otherwise use duration
+        const workoutDuration = log.sessionDuration || log.duration;
+        if (workoutDuration && workoutDuration > 0) {
+          // For session-based workouts, only count once per session
+          if (log.sessionId && log.sessionDuration) {
+            if (!sessionDurations.has(log.sessionId)) {
+              sessionDurations.set(log.sessionId, log.sessionDuration);
+              totalWorkoutTime += log.sessionDuration;
+              workoutDurations.push(log.sessionDuration);
+
+              // Count time this week
+              if (logDate >= startOfWeek) {
+                totalTimeThisWeek += log.sessionDuration;
+                const dayOfWeek = logDate.getDay();
+                weeklyTimeData[dayOfWeek] += log.sessionDuration;
+              }
+
+              // Count time this month
+              if (logDate >= startOfMonth) {
+                totalTimeThisMonth += log.sessionDuration;
+              }
+            }
+          } else if (log.duration) {
+            // Individual exercise workouts
+            totalWorkoutTime += log.duration;
+            workoutDurations.push(log.duration);
+
+            // Count time this week
+            if (logDate >= startOfWeek) {
+              totalTimeThisWeek += log.duration;
+              const dayOfWeek = logDate.getDay();
+              weeklyTimeData[dayOfWeek] += log.duration;
+            }
+
+            // Count time this month
+            if (logDate >= startOfMonth) {
+              totalTimeThisMonth += log.duration;
+            }
+          }
+        }
 
         // Count workouts this week
         if (logDate >= startOfWeek) {
@@ -130,6 +215,12 @@ export default function StatisticsScreen() {
         });
       });
 
+      // Calculate time statistics
+      const workoutsWithTime = workoutDurations.length;
+      const averageWorkoutTime = workoutsWithTime > 0 ? totalWorkoutTime / workoutsWithTime : 0;
+      const longestWorkout = workoutDurations.length > 0 ? Math.max(...workoutDurations) : 0;
+      const shortestWorkout = workoutDurations.length > 0 ? Math.min(...workoutDurations) : 0;
+
       // Convert records map to array and sort by weight
       const prArray = Array.from(recordsMap.entries())
         .map(([exerciseName, maxWeight]) => ({ exerciseName, maxWeight }))
@@ -141,6 +232,12 @@ export default function StatisticsScreen() {
         workoutsThisWeek,
         workoutsThisMonth,
         totalVolume: Math.round(totalVolume),
+        totalWorkoutTime,
+        averageWorkoutTime: Math.round(averageWorkoutTime),
+        longestWorkout,
+        shortestWorkout,
+        totalTimeThisWeek,
+        totalTimeThisMonth,
       });
 
       setPersonalRecords(prArray);
@@ -194,6 +291,96 @@ export default function StatisticsScreen() {
             </View>
           </Card.Content>
         </Card>
+
+        {stats.totalWorkoutTime > 0 && (
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text variant="titleLarge" style={styles.cardTitle}>
+                Time Statistics
+              </Text>
+              <View style={styles.statsGrid}>
+                <TouchableOpacity
+                  style={styles.statItem}
+                  onPress={() => {
+                    console.log('Opening breakdown modal - Total Time');
+                    console.log('All logs count:', allLogs.length);
+                    setBreakdownFilterType('total');
+                    setBreakdownTitle('Total Time Breakdown');
+                    setBreakdownModalVisible(true);
+                  }}
+                >
+                  <View style={styles.tappableStatContent}>
+                    <Text variant="headlineMedium" style={{ color: Colors.primary }}>
+                      {formatDuration(stats.totalWorkoutTime)}
+                    </Text>
+                    <Text variant="bodyMedium">Total Time</Text>
+                    <Text variant="bodySmall" style={styles.drillDownHint}>Tap to view breakdown</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={styles.statItem}>
+                  <Text variant="headlineMedium" style={{ color: Colors.primary }}>
+                    {formatDuration(stats.averageWorkoutTime)}
+                  </Text>
+                  <Text variant="bodyMedium">Avg Workout</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.statItem}
+                  onPress={() => {
+                    setBreakdownFilterType('week');
+                    setBreakdownTitle('This Week Time Breakdown');
+                    setBreakdownModalVisible(true);
+                  }}
+                >
+                  <View style={styles.tappableStatContent}>
+                    <Text variant="headlineMedium" style={{ color: Colors.primary }}>
+                      {formatDuration(stats.totalTimeThisWeek)}
+                    </Text>
+                    <Text variant="bodyMedium">This Week</Text>
+                    <Text variant="bodySmall" style={styles.drillDownHint}>Tap to view breakdown</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.statItem}
+                  onPress={() => {
+                    setBreakdownFilterType('month');
+                    setBreakdownTitle('This Month Time Breakdown');
+                    setBreakdownModalVisible(true);
+                  }}
+                >
+                  <View style={styles.tappableStatContent}>
+                    <Text variant="headlineMedium" style={{ color: Colors.primary }}>
+                      {formatDuration(stats.totalTimeThisMonth)}
+                    </Text>
+                    <Text variant="bodyMedium">This Month</Text>
+                    <Text variant="bodySmall" style={styles.drillDownHint}>Tap to view breakdown</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+              <View style={[styles.statsGrid, { marginTop: Spacing.sm }]}>
+                <View style={styles.statItem}>
+                  <Text variant="titleLarge" style={{ color: Colors.primary }}>
+                    {formatDuration(stats.longestWorkout)}
+                  </Text>
+                  <Text variant="bodySmall">Longest</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text variant="titleLarge" style={{ color: Colors.primary }}>
+                    {formatDuration(stats.shortestWorkout)}
+                  </Text>
+                  <Text variant="bodySmall">Shortest</Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
+        <TimeBreakdownModal
+          visible={breakdownModalVisible}
+          onDismiss={() => setBreakdownModalVisible(false)}
+          logs={allLogs}
+          title={breakdownTitle}
+          filterType={breakdownFilterType}
+        />
 
         {stats.totalWorkouts > 0 && (
           <>
@@ -277,10 +464,13 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   cardTitle: {
     marginBottom: Spacing.md,
     fontWeight: 'bold',
+    color: Colors.text,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -293,7 +483,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     padding: Spacing.sm,
     backgroundColor: Colors.surface,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   chart: {
     marginVertical: Spacing.sm,
@@ -319,5 +509,14 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
+  },
+  tappableStatContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  drillDownHint: {
+    color: Colors.primary,
+    marginTop: Spacing.xs,
+    fontSize: 10,
   },
 });

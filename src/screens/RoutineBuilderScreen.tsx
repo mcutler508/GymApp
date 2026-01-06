@@ -453,9 +453,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: Spacing.md,
     fontWeight: 'bold',
+    color: Colors.text,
   },
   exerciseCard: {
     marginBottom: Spacing.sm,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   exerciseRow: {
     flexDirection: 'row',
@@ -494,10 +497,10 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.xs,
   },
   modalContainer: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.card,
     margin: Spacing.lg,
     padding: Spacing.lg,
-    borderRadius: 8,
+    borderRadius: 12,
     maxHeight: '80%',
   },
   modalTitle: {

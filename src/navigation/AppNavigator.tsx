@@ -24,11 +24,12 @@ function HomeStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: Colors.surface,
         },
-        headerTintColor: '#fff',
+        headerTintColor: Colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
+          color: Colors.text,
         },
       }}
     >
@@ -51,11 +52,12 @@ function ExercisesStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: Colors.surface,
         },
-        headerTintColor: '#fff',
+        headerTintColor: Colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
+          color: Colors.text,
         },
       }}
     >
@@ -78,11 +80,12 @@ function RoutinesStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: Colors.surface,
         },
-        headerTintColor: '#fff',
+        headerTintColor: Colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
+          color: Colors.text,
         },
       }}
     >
@@ -114,6 +117,10 @@ export default function AppNavigator() {
         screenOptions={{
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: Colors.textSecondary,
+          tabBarStyle: {
+            backgroundColor: Colors.surface,
+            borderTopColor: Colors.border,
+          },
           headerShown: false,
         }}
       >
@@ -153,11 +160,12 @@ export default function AppNavigator() {
           options={{
             headerShown: true,
             headerStyle: {
-              backgroundColor: Colors.primary,
+              backgroundColor: Colors.surface,
             },
-            headerTintColor: '#fff',
+            headerTintColor: Colors.text,
             headerTitleStyle: {
               fontWeight: 'bold',
+              color: Colors.text,
             },
             tabBarLabel: 'Log',
             title: 'Workout Log',
@@ -172,11 +180,12 @@ export default function AppNavigator() {
           options={{
             headerShown: true,
             headerStyle: {
-              backgroundColor: Colors.primary,
+              backgroundColor: Colors.surface,
             },
-            headerTintColor: '#fff',
+            headerTintColor: Colors.text,
             headerTitleStyle: {
               fontWeight: 'bold',
+              color: Colors.text,
             },
             tabBarLabel: 'Stats',
             tabBarIcon: ({ color, size }) => (

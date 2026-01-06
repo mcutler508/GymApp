@@ -6,6 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Routine } from '../types';
 import { Colors, Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { formatDuration } from '../utils/timeFormat';
 
 type NavigationProp = StackNavigationProp<any>;
 
@@ -22,6 +23,12 @@ interface WorkoutLog {
   sets: Array<{ weight: number; reps: number }>;
   difficulty: string;
   nextWeight: number;
+  startTime?: string;
+  endTime?: string;
+  duration?: number;
+  sessionStartTime?: string;
+  sessionEndTime?: string;
+  sessionDuration?: number;
 }
 
 interface PersonalRecord {
@@ -42,6 +49,8 @@ export default function HomeScreen() {
   const [totalWorkouts, setTotalWorkouts] = useState(0);
   const [recentPRs, setRecentPRs] = useState<PersonalRecord[]>([]);
   const [weekActivity, setWeekActivity] = useState<DayActivity[]>([]);
+  const [totalTimeThisWeek, setTotalTimeThisWeek] = useState(0);
+  const [averageWorkoutTime, setAverageWorkoutTime] = useState(0);
 
   const loadData = useCallback(async () => {
     try {
@@ -76,6 +85,46 @@ export default function HomeScreen() {
         // Calculate 7-day activity
         const activity = calculateWeekActivity(logs);
         setWeekActivity(activity);
+
+        // Calculate time-based stats
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        let totalTimeThisWeekValue = 0;
+        const workoutDurations: number[] = [];
+        const sessionDurations = new Map<string, number>();
+
+        logs.forEach((log) => {
+          const logDate = new Date(log.date);
+          const workoutDuration = log.sessionDuration || log.duration;
+
+          if (workoutDuration && workoutDuration > 0) {
+            // For session-based workouts, only count once per session
+            if (log.sessionId && log.sessionDuration) {
+              if (!sessionDurations.has(log.sessionId)) {
+                sessionDurations.set(log.sessionId, log.sessionDuration);
+                workoutDurations.push(log.sessionDuration);
+                if (logDate >= startOfWeek) {
+                  totalTimeThisWeekValue += log.sessionDuration;
+                }
+              }
+            } else if (log.duration) {
+              workoutDurations.push(log.duration);
+              if (logDate >= startOfWeek) {
+                totalTimeThisWeekValue += log.duration;
+              }
+            }
+          }
+        });
+
+        const averageTime = workoutDurations.length > 0
+          ? workoutDurations.reduce((sum, d) => sum + d, 0) / workoutDurations.length
+          : 0;
+
+        setTotalTimeThisWeek(totalTimeThisWeekValue);
+        setAverageWorkoutTime(Math.round(averageTime));
       }
     } catch (error) {
       console.error('Error loading home screen data:', error);
@@ -203,6 +252,16 @@ export default function HomeScreen() {
                 <Text variant="bodyLarge" style={styles.totalWorkouts}>
                   {totalWorkouts} Total Workouts
                 </Text>
+                {totalTimeThisWeek > 0 && (
+                  <Text variant="bodyMedium" style={styles.timeStats}>
+                    {formatDuration(totalTimeThisWeek)} this week
+                  </Text>
+                )}
+                {averageWorkoutTime > 0 && (
+                  <Text variant="bodySmall" style={styles.timeStats}>
+                    Avg: {formatDuration(averageWorkoutTime)}
+                  </Text>
+                )}
               </View>
             </View>
           </Card.Content>
@@ -328,9 +387,13 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   streakCard: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: Colors.card,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
   },
   streakContent: {
     flexDirection: 'row',
@@ -339,22 +402,28 @@ const styles = StyleSheet.create({
   },
   streakNumber: {
     fontWeight: 'bold',
-    color: '#E65100',
+    color: Colors.primary,
   },
   streakLabel: {
-    color: '#E65100',
+    color: Colors.textSecondary,
     fontWeight: '600',
   },
   streakStats: {
     alignItems: 'flex-end',
   },
   totalWorkouts: {
-    color: '#E65100',
+    color: Colors.textSecondary,
     fontWeight: '600',
+  },
+  timeStats: {
+    color: Colors.primary,
+    fontWeight: '600',
+    marginTop: Spacing.xs,
   },
   cardTitle: {
     marginBottom: Spacing.sm,
     fontWeight: 'bold',
+    color: Colors.text,
   },
   cardSubtitle: {
     color: Colors.textSecondary,
@@ -404,6 +473,7 @@ const styles = StyleSheet.create({
   },
   prExercise: {
     fontWeight: '600',
+    color: Colors.text,
   },
   prDate: {
     color: Colors.textSecondary,

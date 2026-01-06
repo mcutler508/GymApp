@@ -5,6 +5,7 @@ import { Colors, Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { formatDuration } from '../utils/timeFormat';
 
 type NavigationProp = StackNavigationProp<any>;
 
@@ -19,6 +20,12 @@ interface WorkoutLog {
   sets: Array<{ weight: number; reps: number }>;
   difficulty: string;
   nextWeight: number;
+  startTime?: string;
+  endTime?: string;
+  duration?: number;
+  sessionStartTime?: string;
+  sessionEndTime?: string;
+  sessionDuration?: number;
 }
 
 interface WorkoutSession {
@@ -29,6 +36,7 @@ interface WorkoutSession {
   totalExercises: number;
   totalSets: number;
   totalVolume: number;
+  totalDuration?: number;
 }
 
 export default function WorkoutLogScreen() {
@@ -65,6 +73,10 @@ export default function WorkoutLogScreen() {
               0
             );
 
+            // Get session duration (use sessionDuration if available, otherwise sum individual durations)
+            const sessionDuration = exercises[0]?.sessionDuration;
+            const totalDuration = sessionDuration || exercises.reduce((sum, ex) => sum + (ex.duration || 0), 0);
+
             return {
               sessionId,
               date: exercises[0].date, // Use first exercise date as session date
@@ -73,6 +85,7 @@ export default function WorkoutLogScreen() {
               totalExercises: exercises.length,
               totalSets,
               totalVolume,
+              totalDuration: totalDuration > 0 ? totalDuration : undefined,
             };
           }
         );
@@ -214,6 +227,14 @@ export default function WorkoutLogScreen() {
                   {item.totalVolume.toLocaleString()}
                 </Text>
               </View>
+              {item.totalDuration && (
+                <View style={styles.statBadge}>
+                  <Text variant="bodySmall" style={styles.statLabel}>Time</Text>
+                  <Text variant="titleMedium" style={[styles.statValue, { color: Colors.primary }]}>
+                    {formatDuration(item.totalDuration)}
+                  </Text>
+                </View>
+              )}
             </View>
           </Card.Content>
         </TouchableOpacity>
@@ -237,7 +258,7 @@ export default function WorkoutLogScreen() {
                     <Chip
                       mode="flat"
                       textStyle={{ 
-                        color: '#fff', 
+                        color: Colors.text, 
                         fontSize: 11,
                         fontWeight: '600',
                         lineHeight: 14,
@@ -311,6 +332,8 @@ const styles = StyleSheet.create({
   sessionCard: {
     marginBottom: Spacing.md,
     elevation: 2,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
   },
   sessionHeader: {
     flexDirection: 'row',
