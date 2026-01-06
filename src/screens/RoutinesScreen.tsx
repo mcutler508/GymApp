@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, Card, FAB, Portal, IconButton, Dialog, Button } from 'react-native-paper';
 import { Colors, Spacing } from '../constants/theme';
 import { Routine } from '../types';
@@ -26,6 +26,8 @@ interface WorkoutLog {
 export default function RoutinesScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [activeRoutines, setActiveRoutines] = useState<Routine[]>([]);
+  const [completedRoutines, setCompletedRoutines] = useState<Routine[]>([]);
   const [showStartDialog, setShowStartDialog] = useState(false);
   const [newRoutineId, setNewRoutineId] = useState<string | null>(null);
 
@@ -33,7 +35,14 @@ export default function RoutinesScreen() {
     try {
       const stored = await AsyncStorage.getItem(ROUTINES_STORAGE_KEY);
       if (stored) {
-        setRoutines(JSON.parse(stored));
+        const allRoutines: Routine[] = JSON.parse(stored);
+        setRoutines(allRoutines);
+
+        // Separate active and completed routines
+        const active = allRoutines.filter(r => !r.completed);
+        const completed = allRoutines.filter(r => r.completed);
+        setActiveRoutines(active);
+        setCompletedRoutines(completed);
       }
     } catch (error) {
       console.error('Error loading routines:', error);
@@ -75,6 +84,14 @@ export default function RoutinesScreen() {
   };
 
   const handleStartWorkout = (routine: Routine) => {
+    if (routine.completed) {
+      Alert.alert(
+        'Routine Completed',
+        'This routine has already been completed. Please duplicate it to run it again with updated weights.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
     if (routine.exercises.length === 0) {
       Alert.alert('Empty Routine', 'Please add exercises to this routine first');
       return;
@@ -125,6 +142,7 @@ export default function RoutinesScreen() {
         exercises: duplicatedExercises,
         created_at: new Date().toISOString(),
         last_performed: undefined,
+        completed: false,
       };
 
       // Save the new routine
@@ -168,11 +186,13 @@ export default function RoutinesScreen() {
             )}
           </View>
           <View style={styles.cardActions}>
-            <IconButton
-              icon="pencil"
-              size={20}
-              onPress={() => navigation.navigate('RoutineBuilder', { routineId: item.id })}
-            />
+            {!item.completed && (
+              <IconButton
+                icon="pencil"
+                size={20}
+                onPress={() => navigation.navigate('RoutineBuilder', { routineId: item.id })}
+              />
+            )}
             <IconButton
               icon="delete"
               iconColor={Colors.error}
@@ -183,32 +203,56 @@ export default function RoutinesScreen() {
         </View>
       </Card.Content>
       <Card.Actions style={styles.cardActionsRow}>
-        <IconButton
-          icon="content-copy"
-          iconColor={Colors.secondary}
-          size={28}
-          onPress={() => handleDuplicateRoutine(item)}
-          style={styles.duplicateButton}
-        />
-        <IconButton
-          icon="play-circle"
-          iconColor={Colors.primary}
-          size={32}
-          onPress={() => handleStartWorkout(item)}
-          style={styles.playButton}
-        />
+        {item.completed ? (
+          <IconButton
+            icon="content-copy"
+            iconColor={Colors.secondary}
+            size={28}
+            onPress={() => handleDuplicateRoutine(item)}
+            style={styles.duplicateButton}
+          />
+        ) : (
+          <IconButton
+            icon="play-circle"
+            iconColor={Colors.primary}
+            size={32}
+            onPress={() => handleStartWorkout(item)}
+            style={styles.playButton}
+          />
+        )}
       </Card.Actions>
     </Card>
   );
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={routines}
-        renderItem={renderRoutine}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Active Routines Section */}
+        {activeRoutines.length > 0 && (
+          <View style={styles.section}>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Active Routines
+            </Text>
+            {activeRoutines.map((routine) => (
+              <View key={routine.id}>{renderRoutine({ item: routine })}</View>
+            ))}
+          </View>
+        )}
+
+        {/* Completed Routines Section */}
+        {completedRoutines.length > 0 && (
+          <View style={styles.section}>
+            <Text variant="titleLarge" style={styles.sectionTitle}>
+              Completed Routines
+            </Text>
+            {completedRoutines.map((routine) => (
+              <View key={routine.id}>{renderRoutine({ item: routine })}</View>
+            ))}
+          </View>
+        )}
+
+        {/* Empty State */}
+        {activeRoutines.length === 0 && completedRoutines.length === 0 && (
           <View style={styles.emptyContainer}>
             <Text variant="headlineSmall" style={styles.emptyTitle}>
               No Routines Yet
@@ -217,8 +261,8 @@ export default function RoutinesScreen() {
               Create a routine to get started with your workouts
             </Text>
           </View>
-        }
-      />
+        )}
+      </ScrollView>
 
       <FAB
         style={styles.fab}
@@ -255,8 +299,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  list: {
+  scrollContent: {
     padding: Spacing.md,
+    paddingBottom: 80, // Extra padding for FAB
+  },
+  section: {
+    marginBottom: Spacing.lg,
+  },
+  sectionTitle: {
+    marginBottom: Spacing.md,
+    fontWeight: 'bold',
+    color: Colors.text,
   },
   card: {
     marginBottom: Spacing.md,

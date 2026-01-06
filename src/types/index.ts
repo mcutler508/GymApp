@@ -90,6 +90,7 @@ export interface Routine {
   exercises: RoutineExercise[];
   created_at: string;
   last_performed?: string;
+  completed?: boolean;
 }
 
 // Navigation types

@@ -28,7 +28,9 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [showWeightDialog, setShowWeightDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedExerciseToAdd, setSelectedExerciseToAdd] = useState<Exercise | null>(null);
+  const [selectedExerciseToEdit, setSelectedExerciseToEdit] = useState<RoutineExercise | null>(null);
   const [weightInput, setWeightInput] = useState('');
 
   // Exercise picker filters
@@ -131,29 +133,30 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const handleEditWeight = (exerciseId: string) => {
     const exercise = selectedExercises.find((e) => e.id === exerciseId);
     if (exercise) {
+      setSelectedExerciseToEdit(exercise);
       setWeightInput(exercise.currentWeight?.toString() || '');
-      Alert.prompt(
-        'Edit Weight',
-        'Enter starting weight (lbs)',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Save',
-            onPress: (value) => {
-              const weight = value && value.trim() ? parseFloat(value) : undefined;
-              const updated = selectedExercises.map((e) =>
-                e.id === exerciseId
-                  ? { ...e, startingWeight: weight, currentWeight: weight }
-                  : e
-              );
-              setSelectedExercises(updated);
-            },
-          },
-        ],
-        'plain-text',
-        exercise.currentWeight?.toString() || ''
-      );
+      setShowEditDialog(true);
     }
+  };
+
+  const handleSaveEditedWeight = () => {
+    if (!selectedExerciseToEdit) return;
+
+    const weight = weightInput.trim() ? parseFloat(weightInput) : undefined;
+    if (weight !== undefined && (isNaN(weight) || weight < 0)) {
+      Alert.alert('Invalid Weight', 'Please enter a valid weight value');
+      return;
+    }
+
+    const updated = selectedExercises.map((e) =>
+      e.id === selectedExerciseToEdit.id
+        ? { ...e, startingWeight: weight, currentWeight: weight }
+        : e
+    );
+    setSelectedExercises(updated);
+    setShowEditDialog(false);
+    setWeightInput('');
+    setSelectedExerciseToEdit(null);
   };
 
   const handleSaveRoutine = async () => {
@@ -186,6 +189,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
           name: routineName.trim(),
           exercises: selectedExercises,
           created_at: new Date().toISOString(),
+          completed: false,
         };
         routines.push(newRoutine);
       }
@@ -394,6 +398,31 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
           <Dialog.Actions>
             <Button onPress={() => setShowWeightDialog(false)}>Cancel</Button>
             <Button onPress={handleAddExerciseWithWeight}>Add</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {/* Edit Weight Dialog */}
+      <Portal>
+        <Dialog visible={showEditDialog} onDismiss={() => setShowEditDialog(false)}>
+          <Dialog.Title>Edit Exercise</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={styles.dialogSubtitle}>
+              {selectedExerciseToEdit?.exerciseName}
+            </Text>
+            <TextInput
+              label="Weight (lbs)"
+              value={weightInput}
+              onChangeText={setWeightInput}
+              keyboardType="numeric"
+              mode="outlined"
+              style={styles.weightInput}
+              placeholder="Enter weight"
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowEditDialog(false)}>Cancel</Button>
+            <Button onPress={handleSaveEditedWeight}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
