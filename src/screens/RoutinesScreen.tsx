@@ -75,8 +75,15 @@ export default function RoutinesScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const updatedRoutines = routines.filter((r) => r.id !== routineId);
-            await saveRoutines(updatedRoutines);
+            try {
+              const updatedRoutines = routines.filter((r) => r.id !== routineId);
+              await saveRoutines(updatedRoutines);
+              // Reload routines to update active/completed lists
+              await loadRoutines();
+            } catch (error) {
+              console.error('Error deleting routine:', error);
+              Alert.alert('Error', 'Failed to delete routine');
+            }
           },
         },
       ]
@@ -138,7 +145,7 @@ export default function RoutinesScreen() {
 
       const duplicatedRoutine: Routine = {
         id: `routine-${Date.now()}`,
-        name: `${routine.name} (Copy)`,
+        name: routine.name,
         exercises: duplicatedExercises,
         created_at: new Date().toISOString(),
         last_performed: undefined,
@@ -148,6 +155,9 @@ export default function RoutinesScreen() {
       // Save the new routine
       const updatedRoutines = [...routines, duplicatedRoutine];
       await saveRoutines(updatedRoutines);
+
+      // Reload routines to update active/completed lists
+      await loadRoutines();
 
       // Store the new routine ID and show dialog
       setNewRoutineId(duplicatedRoutine.id);
