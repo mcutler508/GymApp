@@ -2,7 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
+import { useTheme } from '../context/ThemeProvider';
 
 interface WeightSliderProps {
   value: number;
@@ -21,6 +22,7 @@ export default function WeightSlider({
   max = 500,
   step = 5,
 }: WeightSliderProps) {
+  const { theme } = useTheme();
   // Round value to nearest step increment
   const roundedValue = Math.round(value / step) * step;
   
@@ -33,7 +35,7 @@ export default function WeightSlider({
   return (
     <View style={styles.container}>
       {label && (
-        <Text variant="bodyMedium" style={styles.label}>
+        <Text variant="bodyMedium" style={[styles.label, { color: theme.colors.textSecondary }]}>
           {label}
         </Text>
       )}
@@ -44,11 +46,11 @@ export default function WeightSlider({
         step={step}
         value={roundedValue}
         onValueChange={handleValueChange}
-        minimumTrackTintColor={Colors.primary}
-        maximumTrackTintColor={Colors.border}
-        thumbTintColor={Colors.primary}
+        minimumTrackTintColor={theme.colors.primary}
+        maximumTrackTintColor={theme.colors.border}
+        thumbTintColor={theme.colors.primary}
       />
-      <Text variant="titleMedium" style={styles.valueText}>
+      <Text variant="titleMedium" style={[styles.valueText, { color: theme.colors.primary }]}>
         {roundedValue} lbs
       </Text>
     </View>
@@ -61,7 +63,6 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: Spacing.xs,
-    color: Colors.textSecondary,
   },
   slider: {
     width: '100%',
@@ -70,7 +71,6 @@ const styles = StyleSheet.create({
   valueText: {
     textAlign: 'center',
     marginTop: Spacing.xs,
-    color: Colors.primary,
     fontWeight: 'bold',
   },
 });

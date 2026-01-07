@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, BackHandler } from 'react-native';
 import { Text, Card, IconButton, ProgressBar, Dialog, TextInput, Button, Portal } from 'react-native-paper';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
+import { useTheme } from '../context/ThemeProvider';
 import { Routine, RoutineExercise, DifficultyRating } from '../types';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -48,6 +49,8 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   const [currentSets, setCurrentSets] = useState<WorkoutSet[]>([]);
   const [currentWeight, setCurrentWeight] = useState<number>(0);
   const [currentReps, setCurrentReps] = useState<number>(8); // Default to 8 reps
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
 
   useEffect(() => {
     loadRoutine();
@@ -525,7 +528,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
           <Text variant="bodySmall" style={styles.progressText}>
             {completedExercises.size} of {routine.exercises.length} exercises complete
           </Text>
-          <ProgressBar progress={progress} color={Colors.primary} style={styles.progressBar} />
+          <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progressBar} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -609,7 +612,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
         <Text variant="bodySmall" style={styles.progressText}>
           {completedExercises.size} of {routine.exercises.length} exercises complete
         </Text>
-        <ProgressBar progress={progress} color={Colors.primary} style={styles.progressBar} />
+        <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progressBar} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -649,7 +652,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                     {!isCompleted && (
                       <IconButton
                         icon="scale"
-                        iconColor={Colors.primary}
+                        iconColor={theme.colors.primary}
                         size={24}
                         onPress={(e) => handleAdjustWeight(exercise, e)}
                         style={styles.weightButton}
@@ -658,13 +661,13 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                     {isCompleted ? (
                       <IconButton
                         icon="check-circle"
-                        iconColor={Colors.success}
+                        iconColor={theme.colors.success}
                         size={32}
                       />
                     ) : (
                       <IconButton
                         icon="circle-outline"
-                        iconColor={Colors.textSecondary}
+                        iconColor={theme.colors.textSecondary}
                         size={32}
                       />
                     )}
@@ -700,21 +703,21 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: theme.colors.background,
   },
   progressContainer: {
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: theme.colors.border,
   },
   progressText: {
     textAlign: 'center',
     marginBottom: Spacing.xs,
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
   },
   progressBar: {
     height: 8,
@@ -726,34 +729,34 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: Spacing.xs,
     textAlign: 'center',
-    color: Colors.text,
+    color: theme.colors.text,
   },
   exerciseName: {
     textAlign: 'center',
-    color: Colors.primary,
+    color: theme.colors.primary,
     marginBottom: Spacing.sm,
   },
   subtitle: {
     textAlign: 'center',
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
     marginBottom: Spacing.lg,
   },
   instructionText: {
     textAlign: 'center',
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
     marginBottom: Spacing.lg,
   },
   exerciseCard: {
     marginBottom: Spacing.md,
     elevation: 2,
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderRadius: 12,
   },
   completedCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     opacity: 0.6,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: theme.colors.primary,
   },
   exerciseRow: {
     flexDirection: 'row',
@@ -768,17 +771,17 @@ const styles = StyleSheet.create({
     marginRight: -8,
   },
   weightText: {
-    color: Colors.primary,
+    color: theme.colors.primary,
     fontWeight: 'bold',
     marginTop: Spacing.xs,
   },
   lastPerformedText: {
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
     marginTop: Spacing.xs,
   },
   completedText: {
     textDecorationLine: 'line-through',
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
   },
   difficultyGrid: {
     marginVertical: Spacing.lg,
@@ -792,7 +795,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: Spacing.xs,
     elevation: 4,
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderRadius: 12,
   },
   difficultyContent: {
@@ -806,35 +809,35 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
-    color: Colors.text,
+    color: theme.colors.text,
   },
   difficultyDesc: {
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
     fontSize: 12,
   },
   easyCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: theme.colors.primary,
   },
   normalCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: theme.colors.border,
   },
   hardCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: theme.colors.border,
   },
   expertCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: theme.colors.border,
   },
   dialogSubtitle: {
     marginBottom: Spacing.md,
-    color: Colors.textSecondary,
+    color: theme.colors.textSecondary,
   },
   weightInput: {
     marginTop: Spacing.sm,
@@ -845,7 +848,7 @@ const styles = StyleSheet.create({
   },
   inputCard: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderRadius: 12,
   },
   inputTitle: {
@@ -859,7 +862,7 @@ const styles = StyleSheet.create({
   },
   setsCard: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
+    backgroundColor: theme.colors.card,
     borderRadius: 12,
   },
   setsTitle: {
@@ -871,7 +874,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: theme.colors.border,
   },
   buttonRow: {
     flexDirection: 'row',

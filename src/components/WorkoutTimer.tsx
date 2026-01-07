@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
+import { useTheme } from '../context/ThemeProvider';
 import { formatDurationMMSS } from '../utils/timeFormat';
 
 interface WorkoutTimerProps {
@@ -10,6 +11,7 @@ interface WorkoutTimerProps {
 }
 
 export default function WorkoutTimer({ startTime, onDurationChange }: WorkoutTimerProps) {
+  const { theme } = useTheme();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -37,11 +39,11 @@ export default function WorkoutTimer({ startTime, onDurationChange }: WorkoutTim
   }, [startTime, onDurationChange]);
 
   return (
-    <View style={styles.container}>
-      <Text variant="headlineMedium" style={styles.timerText}>
+    <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
+      <Text variant="headlineMedium" style={[styles.timerText, { color: theme.colors.primary }]}>
         {formatDurationMMSS(elapsedSeconds)}
       </Text>
-      <Text variant="bodySmall" style={styles.labelText}>
+      <Text variant="bodySmall" style={[styles.labelText, { color: theme.colors.textSecondary }]}>
         Workout Time
       </Text>
     </View>
@@ -54,17 +56,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.card,
     borderRadius: 12,
     marginBottom: Spacing.md,
   },
   timerText: {
-    color: Colors.primary,
     fontWeight: 'bold',
     fontFamily: 'monospace',
   },
   labelText: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
 });

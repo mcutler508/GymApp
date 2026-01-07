@@ -7,6 +7,8 @@ import { Routine } from '../types';
 import { Colors, Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDuration } from '../utils/timeFormat';
+import ThemeToggle from '../components/ThemeToggle';
+import { useTheme } from '../context/ThemeProvider';
 
 type NavigationProp = StackNavigationProp<any>;
 
@@ -44,6 +46,7 @@ interface DayActivity {
 
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
   const [activeRoutines, setActiveRoutines] = useState<Routine[]>([]);
   const [streak, setStreak] = useState(0);
   const [totalWorkouts, setTotalWorkouts] = useState(0);
@@ -234,31 +237,31 @@ export default function HomeScreen() {
   const maxActivity = Math.max(...weekActivity.map(d => d.count), 1);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.content}>
         {/* Streak Banner */}
-        <Card style={[styles.card, styles.streakCard]}>
+        <Card style={[styles.card, styles.streakCard, { borderLeftColor: theme.colors.primary }]}>
           <Card.Content>
             <View style={styles.streakContent}>
               <View>
-                <Text variant="headlineLarge" style={styles.streakNumber}>
+                <Text variant="headlineLarge" style={[styles.streakNumber, { color: theme.colors.primary }]}>
                   {streak} 🔥
                 </Text>
-                <Text variant="titleMedium" style={styles.streakLabel}>
+                <Text variant="titleMedium" style={[styles.streakLabel, { color: theme.colors.textSecondary }]}>
                   Day Streak
                 </Text>
               </View>
               <View style={styles.streakStats}>
-                <Text variant="bodyLarge" style={styles.totalWorkouts}>
+                <Text variant="bodyLarge" style={[styles.totalWorkouts, { color: theme.colors.textSecondary }]}>
                   {totalWorkouts} Total Workouts
                 </Text>
                 {totalTimeThisWeek > 0 && (
-                  <Text variant="bodyMedium" style={styles.timeStats}>
+                  <Text variant="bodyMedium" style={[styles.timeStats, { color: theme.colors.primary }]}>
                     {formatDuration(totalTimeThisWeek)} this week
                   </Text>
                 )}
                 {averageWorkoutTime > 0 && (
-                  <Text variant="bodySmall" style={styles.timeStats}>
+                  <Text variant="bodySmall" style={[styles.timeStats, { color: theme.colors.primary }]}>
                     Avg: {formatDuration(averageWorkoutTime)}
                   </Text>
                 )}
@@ -270,7 +273,7 @@ export default function HomeScreen() {
         {/* 7-Day Activity */}
         <Card style={styles.card}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
+            <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
               This Week's Activity
             </Text>
             <View style={styles.activityChart}>
@@ -282,15 +285,15 @@ export default function HomeScreen() {
                         styles.bar,
                         {
                           height: day.count > 0 ? `${(day.count / maxActivity) * 100}%` : 4,
-                          backgroundColor: day.count > 0 ? Colors.primary : Colors.border,
+                          backgroundColor: day.count > 0 ? theme.colors.primary : theme.colors.border,
                         },
                       ]}
                     />
                   </View>
-                  <Text variant="bodySmall" style={styles.dayLabel}>
+                  <Text variant="bodySmall" style={[styles.dayLabel, { color: theme.colors.textSecondary }]}>
                     {day.day}
                   </Text>
-                  <Text variant="bodySmall" style={styles.countLabel}>
+                  <Text variant="bodySmall" style={[styles.countLabel, { color: theme.colors.primary }]}>
                     {day.count || ''}
                   </Text>
                 </View>
@@ -303,20 +306,20 @@ export default function HomeScreen() {
         {recentPRs.length > 0 && (
           <Card style={styles.card}>
             <Card.Content>
-              <Text variant="titleLarge" style={styles.cardTitle}>
+              <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
                 Recent Personal Records 🏆
               </Text>
               {recentPRs.map((pr, index) => (
-                <View key={index} style={styles.prItem}>
+                <View key={index} style={[styles.prItem, { borderBottomColor: theme.colors.border + '40' }]}>
                   <View style={{ flex: 1 }}>
-                    <Text variant="bodyLarge" style={styles.prExercise}>
+                    <Text variant="bodyLarge" style={[styles.prExercise, { color: theme.colors.text }]}>
                       {pr.exerciseName}
                     </Text>
-                    <Text variant="bodySmall" style={styles.prDate}>
+                    <Text variant="bodySmall" style={[styles.prDate, { color: theme.colors.textSecondary }]}>
                       {new Date(pr.date).toLocaleDateString()}
                     </Text>
                   </View>
-                  <Text variant="titleMedium" style={styles.prWeight}>
+                  <Text variant="titleMedium" style={[styles.prWeight, { color: theme.colors.primary }]}>
                     {pr.weight} lbs
                   </Text>
                 </View>
@@ -329,24 +332,24 @@ export default function HomeScreen() {
         {activeRoutines.length > 0 && (
           <Card style={styles.card}>
             <Card.Content>
-              <Text variant="titleLarge" style={styles.cardTitle}>
+              <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
                 Ready to Workout
               </Text>
-              <Text variant="bodyMedium" style={styles.cardSubtitle}>
+              <Text variant="bodyMedium" style={[styles.cardSubtitle, { color: theme.colors.textSecondary }]}>
                 Start an active routine
               </Text>
             </Card.Content>
             {activeRoutines.map((routine) => (
               <Card.Actions key={routine.id} style={styles.routineAction}>
                 <View style={styles.routineInfo}>
-                  <Text variant="bodyLarge">{routine.name}</Text>
-                  <Text variant="bodySmall" style={styles.exerciseCount}>
+                  <Text variant="bodyLarge" style={{ color: theme.colors.text }}>{routine.name}</Text>
+                  <Text variant="bodySmall" style={[styles.exerciseCount, { color: theme.colors.textSecondary }]}>
                     {routine.exercises.length} exercise{routine.exercises.length !== 1 ? 's' : ''}
                   </Text>
                 </View>
                 <IconButton
                   icon="play-circle"
-                  iconColor={Colors.primary}
+                  iconColor={theme.colors.primary}
                   size={32}
                   onPress={() => handleStartRoutine(routine)}
                 />
@@ -359,18 +362,28 @@ export default function HomeScreen() {
         {activeRoutines.length === 0 && totalWorkouts === 0 && (
           <Card style={styles.card}>
             <Card.Content>
-              <Text variant="titleLarge" style={styles.cardTitle}>
+              <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
                 Welcome to Gym Tracker! 💪
               </Text>
-              <Text variant="bodyMedium" style={styles.emptyText}>
+              <Text variant="bodyMedium" style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
                 Start your fitness journey by creating your first routine or logging a quick workout.
               </Text>
-              <Text variant="bodyMedium" style={styles.emptyText}>
+              <Text variant="bodyMedium" style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
                 Use the tabs below to get started!
               </Text>
             </Card.Content>
           </Card>
         )}
+
+        {/* Settings */}
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
+              Settings
+            </Text>
+            <ThemeToggle />
+          </Card.Content>
+        </Card>
       </View>
     </ScrollView>
   );
@@ -379,7 +392,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   content: {
     padding: Spacing.md,
@@ -387,13 +399,10 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   streakCard: {
-    backgroundColor: Colors.card,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
   },
   streakContent: {
     flexDirection: 'row',
@@ -402,31 +411,25 @@ const styles = StyleSheet.create({
   },
   streakNumber: {
     fontWeight: 'bold',
-    color: Colors.primary,
   },
   streakLabel: {
-    color: Colors.textSecondary,
     fontWeight: '600',
   },
   streakStats: {
     alignItems: 'flex-end',
   },
   totalWorkouts: {
-    color: Colors.textSecondary,
     fontWeight: '600',
   },
   timeStats: {
-    color: Colors.primary,
     fontWeight: '600',
     marginTop: Spacing.xs,
   },
   cardTitle: {
     marginBottom: Spacing.sm,
     fontWeight: 'bold',
-    color: Colors.text,
   },
   cardSubtitle: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   activityChart: {
@@ -454,11 +457,9 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     marginTop: Spacing.xs,
-    color: Colors.textSecondary,
     fontSize: 11,
   },
   countLabel: {
-    color: Colors.primary,
     fontSize: 11,
     fontWeight: '600',
     height: 14,
@@ -469,18 +470,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border + '40',
   },
   prExercise: {
     fontWeight: '600',
-    color: Colors.text,
   },
   prDate: {
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   prWeight: {
-    color: Colors.primary,
     fontWeight: 'bold',
   },
   routineAction: {
@@ -491,11 +488,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exerciseCount: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   emptyText: {
-    color: Colors.textSecondary,
     marginTop: Spacing.md,
     lineHeight: 22,
   },

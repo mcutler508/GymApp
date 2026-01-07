@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 // @ts-ignore
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Colors } from '../constants/theme';
+import { useTheme } from '../context/ThemeProvider';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -21,16 +21,17 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 function HomeStack() {
+  const { theme } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: Colors.text,
+        headerTintColor: theme.colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
-          color: Colors.text,
+          color: theme.colors.text,
         },
       }}
     >
@@ -49,16 +50,17 @@ function HomeStack() {
 }
 
 function ExercisesStack() {
+  const { theme } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: Colors.text,
+        headerTintColor: theme.colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
-          color: Colors.text,
+          color: theme.colors.text,
         },
       }}
     >
@@ -77,16 +79,17 @@ function ExercisesStack() {
 }
 
 function RoutinesStack() {
+  const { theme } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: Colors.text,
+        headerTintColor: theme.colors.text,
         headerTitleStyle: {
           fontWeight: 'bold',
-          color: Colors.text,
+          color: theme.colors.text,
         },
       }}
     >
@@ -112,15 +115,16 @@ function RoutinesStack() {
 }
 
 export default function AppNavigator() {
+  const { theme } = useTheme();
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={{
-          tabBarActiveTintColor: Colors.primary,
-          tabBarInactiveTintColor: Colors.textSecondary,
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.textSecondary,
           tabBarStyle: {
-            backgroundColor: Colors.surface,
-            borderTopColor: Colors.border,
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.border,
           },
           headerShown: false,
         }}
@@ -161,12 +165,12 @@ export default function AppNavigator() {
           options={{
             headerShown: true,
             headerStyle: {
-              backgroundColor: Colors.surface,
+              backgroundColor: theme.colors.surface,
             },
-            headerTintColor: Colors.text,
+            headerTintColor: theme.colors.text,
             headerTitleStyle: {
               fontWeight: 'bold',
-              color: Colors.text,
+              color: theme.colors.text,
             },
             tabBarLabel: 'Log',
             title: 'Workout Log',
@@ -181,12 +185,12 @@ export default function AppNavigator() {
           options={{
             headerShown: true,
             headerStyle: {
-              backgroundColor: Colors.surface,
+              backgroundColor: theme.colors.surface,
             },
-            headerTintColor: Colors.text,
+            headerTintColor: theme.colors.text,
             headerTitleStyle: {
               fontWeight: 'bold',
-              color: Colors.text,
+              color: theme.colors.text,
             },
             tabBarLabel: 'Stats',
             tabBarIcon: ({ color, size }) => (
