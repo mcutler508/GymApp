@@ -394,6 +394,58 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
     }
   };
 
+  const handleEndRoutine = () => {
+    const incompleteCount = routine ? routine.exercises.length - completedExercises.size : 0;
+    const message = incompleteCount > 0
+      ? `You have ${incompleteCount} incomplete exercise${incompleteCount > 1 ? 's' : ''}. Incomplete exercises will not be saved. Are you sure you want to end this workout?`
+      : 'Are you sure you want to end this workout?';
+
+    Alert.alert(
+      'End Workout',
+      message,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'End Workout',
+          style: 'destructive',
+          onPress: async () => {
+            // Calculate session duration
+            const sessionEndTime = Date.now();
+            const totalSessionDuration = Math.floor((sessionEndTime - sessionStartTime) / 1000);
+
+            // Update all logs in this session with session timing
+            try {
+              const logsString = await AsyncStorage.getItem('workoutLogs');
+              if (logsString) {
+                const logs = JSON.parse(logsString);
+                const updatedLogs = logs.map((log: any) => {
+                  if (log.sessionId === sessionId) {
+                    return {
+                      ...log,
+                      sessionStartTime: new Date(sessionStartTime).toISOString(),
+                      sessionEndTime: new Date(sessionEndTime).toISOString(),
+                      sessionDuration: totalSessionDuration,
+                    };
+                  }
+                  return log;
+                });
+                await AsyncStorage.setItem('workoutLogs', JSON.stringify(updatedLogs));
+              }
+            } catch (error) {
+              console.error('Error updating session timing:', error);
+            }
+
+            // Navigate back to Routines screen
+            navigation.navigate('Routines');
+          },
+        },
+      ]
+    );
+  };
+
   if (!routine) {
     return (
       <View style={styles.container}>
@@ -408,6 +460,22 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   if (showDifficultyGrid && selectedExercise) {
     return (
       <View style={styles.container}>
+        <View style={styles.progressContainer}>
+          <WorkoutTimer startTime={sessionStartTime} onDurationChange={setSessionDuration} />
+          <Text variant="bodySmall" style={styles.progressText}>
+            {completedExercises.size} of {routine.exercises.length} exercises complete
+          </Text>
+          <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progressBar} />
+          <Button
+            mode="contained"
+            onPress={handleEndRoutine}
+            buttonColor={theme.colors.error}
+            textColor={theme.colors.onError}
+            style={styles.endRoutineButton}
+          >
+            End Routine
+          </Button>
+        </View>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text variant="headlineMedium" style={styles.title}>
             How was that exercise?
@@ -529,6 +597,15 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
             {completedExercises.size} of {routine.exercises.length} exercises complete
           </Text>
           <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progressBar} />
+          <Button
+            mode="contained"
+            onPress={handleEndRoutine}
+            buttonColor={theme.colors.error}
+            textColor={theme.colors.onError}
+            style={styles.endRoutineButton}
+          >
+            End Routine
+          </Button>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -539,7 +616,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
           <Card style={styles.inputCard}>
             <Card.Content>
               <Text variant="titleMedium" style={styles.inputTitle}>
-                Add Set
+                Adjust weight and reps
               </Text>
 
               <WeightSlider
@@ -554,9 +631,25 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 onValueChange={setCurrentReps}
               />
 
-              <Button mode="contained" onPress={addSet} style={styles.addButton}>
-                Add Set
-              </Button>
+              <View style={styles.buttonRow}>
+                <Button
+                  mode="contained"
+                  onPress={addSet}
+                  style={[styles.button, { flex: 1, marginRight: Spacing.xs }]}
+                >
+                  Add Set
+                </Button>
+                <Button
+                  mode="contained"
+                  onPress={completeExercise}
+                  style={[styles.button, { flex: 1, marginLeft: Spacing.xs }]}
+                  buttonColor={theme.colors.error}
+                  textColor={theme.colors.onError}
+                  disabled={currentSets.length === 0}
+                >
+                  Complete Exercise
+                </Button>
+              </View>
             </Card.Content>
           </Card>
 
@@ -583,23 +676,6 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
             </Card>
           )}
 
-          <View style={styles.buttonRow}>
-            <Button
-              mode="outlined"
-              onPress={cancelExercise}
-              style={[styles.button, { flex: 1, marginRight: Spacing.xs }]}
-            >
-              Cancel
-            </Button>
-            <Button
-              mode="contained"
-              onPress={completeExercise}
-              style={[styles.button, { flex: 1, marginLeft: Spacing.xs }]}
-              disabled={currentSets.length === 0}
-            >
-              Complete Exercise
-            </Button>
-          </View>
         </ScrollView>
       </View>
     );
@@ -613,6 +689,15 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
           {completedExercises.size} of {routine.exercises.length} exercises complete
         </Text>
         <ProgressBar progress={progress} color={theme.colors.primary} style={styles.progressBar} />
+        <Button
+          mode="contained"
+          onPress={handleEndRoutine}
+          buttonColor={theme.colors.error}
+          textColor={theme.colors.onError}
+          style={styles.endRoutineButton}
+        >
+          End Routine
+        </Button>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -722,6 +807,9 @@ const getStyles = (theme: any) => StyleSheet.create({
   progressBar: {
     height: 8,
     borderRadius: 4,
+  },
+  endRoutineButton: {
+    marginTop: Spacing.md,
   },
   scrollContent: {
     padding: Spacing.md,
