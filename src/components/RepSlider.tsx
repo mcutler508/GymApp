@@ -4,29 +4,26 @@ import { Text } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
 import { Colors, Spacing } from '../constants/theme';
 
-interface WeightSliderProps {
+interface RepSliderProps {
   value: number;
   onValueChange: (value: number) => void;
   label?: string;
   min?: number;
   max?: number;
-  step?: number;
 }
 
-export default function WeightSlider({
+export default function RepSlider({
   value,
   onValueChange,
-  label,
-  min = 0,
-  max = 500,
-  step = 5,
-}: WeightSliderProps) {
-  // Round value to nearest step increment
-  const roundedValue = Math.round(value / step) * step;
-  
+  label = 'Reps',
+  min = 1,
+  max = 20,
+}: RepSliderProps) {
+  // Round value to nearest integer
+  const roundedValue = Math.round(value);
+
   const handleValueChange = (newValue: number) => {
-    // Round to nearest step increment
-    const rounded = Math.round(newValue / step) * step;
+    const rounded = Math.round(newValue);
     onValueChange(rounded);
   };
 
@@ -41,15 +38,15 @@ export default function WeightSlider({
         style={styles.slider}
         minimumValue={min}
         maximumValue={max}
-        step={step}
-        value={roundedValue}
+        step={1}
+        value={roundedValue || min}
         onValueChange={handleValueChange}
         minimumTrackTintColor={Colors.primary}
         maximumTrackTintColor={Colors.border}
         thumbTintColor={Colors.primary}
       />
       <Text variant="titleMedium" style={styles.valueText}>
-        {roundedValue} lbs
+        {roundedValue || min} reps
       </Text>
     </View>
   );
@@ -74,5 +71,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-
-

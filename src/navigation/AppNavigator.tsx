@@ -9,6 +9,7 @@ import { Colors } from '../constants/theme';
 // Screens
 import HomeScreen from '../screens/HomeScreen';
 import ExercisesScreen from '../screens/ExercisesScreen';
+import ExerciseStatsScreen from '../screens/ExerciseStatsScreen';
 import WorkoutLogScreen from '../screens/WorkoutLogScreen';
 import StatisticsScreen from '../screens/StatisticsScreen';
 import ActiveWorkoutScreen from '../screens/ActiveWorkoutScreen';
@@ -67,9 +68,9 @@ function ExercisesStack() {
         options={{ title: 'Exercises' }}
       />
       <Stack.Screen
-        name="ActiveWorkout"
-        component={ActiveWorkoutScreen}
-        options={{ title: 'Active Workout' }}
+        name="ExerciseStats"
+        component={ExerciseStatsScreen}
+        options={{ title: 'Exercise Stats' }}
       />
     </Stack.Navigator>
   );

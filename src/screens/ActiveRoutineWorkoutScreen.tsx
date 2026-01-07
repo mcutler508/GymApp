@@ -9,6 +9,7 @@ import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WorkoutTimer from '../components/WorkoutTimer';
 import WeightSlider from '../components/WeightSlider';
+import RepSlider from '../components/RepSlider';
 
 type ActiveRoutineWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveRoutineWorkout'>;
 type ActiveRoutineWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveRoutineWorkout'>;
@@ -16,6 +17,12 @@ type ActiveRoutineWorkoutScreenNavigationProp = StackNavigationProp<RootStackPar
 interface Props {
   route: ActiveRoutineWorkoutScreenRouteProp;
   navigation: ActiveRoutineWorkoutScreenNavigationProp;
+}
+
+interface WorkoutSet {
+  id: string;
+  weight: number;
+  reps: number;
 }
 
 const ROUTINES_STORAGE_KEY = 'routines';
@@ -35,6 +42,12 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   const [sessionDuration, setSessionDuration] = useState(0);
   const [currentExerciseStartTime, setCurrentExerciseStartTime] = useState<number | null>(null);
   const [currentExerciseId, setCurrentExerciseId] = useState<string | null>(null);
+
+  // Set tracking state
+  const [activeExercise, setActiveExercise] = useState<RoutineExercise | null>(null);
+  const [currentSets, setCurrentSets] = useState<WorkoutSet[]>([]);
+  const [currentWeight, setCurrentWeight] = useState<number>(0);
+  const [currentReps, setCurrentReps] = useState<number>(8); // Default to 8 reps
 
   useEffect(() => {
     loadRoutine();
@@ -88,10 +101,13 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
       // Already completed, do nothing or show message
       return;
     }
-    setSelectedExercise(exercise);
+    // Start set tracking for this exercise
+    setActiveExercise(exercise);
     setCurrentExerciseStartTime(Date.now());
     setCurrentExerciseId(exercise.id);
-    setShowDifficultyGrid(true);
+    setCurrentWeight(exercise.currentWeight || exercise.startingWeight || 0);
+    setCurrentSets([]);
+    setCurrentReps(8); // Reset to default 8 reps
   };
 
   const handleAdjustWeight = (exercise: RoutineExercise, event: any) => {
@@ -140,6 +156,44 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
     setWeightInput(0);
   };
 
+  const addSet = () => {
+    if (!currentWeight || !currentReps) {
+      Alert.alert('Error', 'Please set both weight and reps');
+      return;
+    }
+
+    const newSet: WorkoutSet = {
+      id: Date.now().toString(),
+      weight: currentWeight,
+      reps: currentReps,
+    };
+
+    setCurrentSets([...currentSets, newSet]);
+    // Keep both weight and reps for next set (user can adjust if needed)
+  };
+
+  const removeSet = (id: string) => {
+    setCurrentSets(currentSets.filter(set => set.id !== id));
+  };
+
+  const completeExercise = () => {
+    if (currentSets.length === 0) {
+      Alert.alert('Error', 'Please add at least one set');
+      return;
+    }
+    setSelectedExercise(activeExercise);
+    setShowDifficultyGrid(true);
+  };
+
+  const cancelExercise = () => {
+    setActiveExercise(null);
+    setCurrentSets([]);
+    setCurrentWeight(0);
+    setCurrentReps(8);
+    setCurrentExerciseStartTime(null);
+    setCurrentExerciseId(null);
+  };
+
   const calculateNextWeight = (currentWeight: number, difficulty: DifficultyRating): number => {
     const adjustments = {
       easy: 0.10,
@@ -157,8 +211,9 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   const handleDifficultySelection = async (difficulty: DifficultyRating) => {
     if (!selectedExercise || !routine) return;
 
-    const currentWeight = selectedExercise.currentWeight || selectedExercise.startingWeight || 0;
-    const newWeight = calculateNextWeight(currentWeight, difficulty);
+    // Use first set's weight for rating calculation
+    const firstSetWeight = currentSets[0]?.weight || 0;
+    const newWeight = calculateNextWeight(firstSetWeight, difficulty);
 
     // Calculate exercise duration
     const endTime = Date.now();
@@ -175,20 +230,25 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
     updatedCompleted.add(selectedExercise.id);
     setCompletedExercises(updatedCompleted);
 
-    // Save workout log with duration
+    // Save workout log with duration and sets
     await saveWorkoutLog(
-      selectedExercise, 
-      currentWeight, 
-      difficulty, 
+      selectedExercise,
+      firstSetWeight,
+      difficulty,
       newWeight,
       exerciseDuration,
       exerciseStartTimeISO,
-      exerciseEndTimeISO
+      exerciseEndTimeISO,
+      currentSets
     );
 
-    // Clear timer state
+    // Clear timer state and exercise tracking state
     setCurrentExerciseStartTime(null);
     setCurrentExerciseId(null);
+    setActiveExercise(null);
+    setCurrentSets([]);
+    setCurrentWeight(0);
+    setCurrentReps(8);
 
     // Update the routine with new weight and last performance
     const updatedExercises = routine.exercises.map((ex) =>
@@ -284,14 +344,15 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
     nextWeight: number,
     duration?: number,
     startTime?: string,
-    endTime?: string
+    endTime?: string,
+    sets?: WorkoutSet[]
   ) => {
     try {
-      // Create a workout log entry (routine workouts don't have detailed set info)
+      // Create a workout log entry with actual sets
       const workoutLog = {
         exerciseName: exercise.exerciseName,
         date: new Date().toISOString(),
-        sets: [{ weight, reps: 0 }], // Placeholder since routine doesn't track sets
+        sets: sets || [{ weight, reps: 0 }], // Use actual sets or fallback to placeholder
         difficulty,
         nextWeight,
         duration,
@@ -340,6 +401,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
 
   const progress = completedExercises.size / routine.exercises.length;
 
+  // Rating grid view (CHECK THIS FIRST!)
   if (showDifficultyGrid && selectedExercise) {
     return (
       <View style={styles.container}>
@@ -446,6 +508,94 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 </Card.Content>
               </Card>
             </View>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // Active exercise set tracking view
+  if (activeExercise) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.progressContainer}>
+          {currentExerciseStartTime && (
+            <WorkoutTimer startTime={currentExerciseStartTime} onDurationChange={() => {}} />
+          )}
+          <Text variant="bodySmall" style={styles.progressText}>
+            {completedExercises.size} of {routine.exercises.length} exercises complete
+          </Text>
+          <ProgressBar progress={progress} color={Colors.primary} style={styles.progressBar} />
+        </View>
+
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text variant="headlineMedium" style={styles.title}>
+            {activeExercise.exerciseName}
+          </Text>
+
+          <Card style={styles.inputCard}>
+            <Card.Content>
+              <Text variant="titleMedium" style={styles.inputTitle}>
+                Add Set
+              </Text>
+
+              <WeightSlider
+                label="Weight (lbs)"
+                value={currentWeight}
+                onValueChange={setCurrentWeight}
+              />
+
+              <RepSlider
+                label="Reps"
+                value={currentReps}
+                onValueChange={setCurrentReps}
+              />
+
+              <Button mode="contained" onPress={addSet} style={styles.addButton}>
+                Add Set
+              </Button>
+            </Card.Content>
+          </Card>
+
+          {currentSets.length > 0 && (
+            <Card style={styles.setsCard}>
+              <Card.Content>
+                <Text variant="titleMedium" style={styles.setsTitle}>
+                  Sets Completed ({currentSets.length})
+                </Text>
+
+                {currentSets.map((set, index) => (
+                  <View key={set.id} style={styles.setRow}>
+                    <Text variant="bodyLarge">
+                      Set {index + 1}: {set.weight} lbs × {set.reps} reps
+                    </Text>
+                    <IconButton
+                      icon="delete"
+                      size={20}
+                      onPress={() => removeSet(set.id)}
+                    />
+                  </View>
+                ))}
+              </Card.Content>
+            </Card>
+          )}
+
+          <View style={styles.buttonRow}>
+            <Button
+              mode="outlined"
+              onPress={cancelExercise}
+              style={[styles.button, { flex: 1, marginRight: Spacing.xs }]}
+            >
+              Cancel
+            </Button>
+            <Button
+              mode="contained"
+              onPress={completeExercise}
+              style={[styles.button, { flex: 1, marginLeft: Spacing.xs }]}
+              disabled={currentSets.length === 0}
+            >
+              Complete Exercise
+            </Button>
           </View>
         </ScrollView>
       </View>
@@ -692,5 +842,43 @@ const styles = StyleSheet.create({
   backButton: {
     marginTop: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  inputCard: {
+    marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+  },
+  inputTitle: {
+    marginBottom: Spacing.md,
+  },
+  input: {
+    marginBottom: Spacing.md,
+  },
+  addButton: {
+    marginTop: Spacing.sm,
+  },
+  setsCard: {
+    marginBottom: Spacing.md,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+  },
+  setsTitle: {
+    marginBottom: Spacing.md,
+  },
+  setRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: Spacing.md,
+  },
+  button: {
+    paddingVertical: Spacing.sm,
   },
 });

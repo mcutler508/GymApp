@@ -26,6 +26,7 @@ interface WorkoutLog {
 export default function RoutinesScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [routines, setRoutines] = useState<Routine[]>([]);
+  const [favoriteRoutines, setFavoriteRoutines] = useState<Routine[]>([]);
   const [activeRoutines, setActiveRoutines] = useState<Routine[]>([]);
   const [completedRoutines, setCompletedRoutines] = useState<Routine[]>([]);
   const [showStartDialog, setShowStartDialog] = useState(false);
@@ -38,9 +39,11 @@ export default function RoutinesScreen() {
         const allRoutines: Routine[] = JSON.parse(stored);
         setRoutines(allRoutines);
 
-        // Separate active and completed routines
-        const active = allRoutines.filter(r => !r.completed);
+        // Separate favorites, active, and completed routines
+        const favorites = allRoutines.filter(r => r.isFavorite && !r.completed);
+        const active = allRoutines.filter(r => !r.completed && !r.isFavorite);
         const completed = allRoutines.filter(r => r.completed);
+        setFavoriteRoutines(favorites);
         setActiveRoutines(active);
         setCompletedRoutines(completed);
       }
@@ -180,6 +183,50 @@ export default function RoutinesScreen() {
     setNewRoutineId(null);
   };
 
+  const toggleFavorite = async (routineId: string) => {
+    try {
+      const updatedRoutines = routines.map((r) =>
+        r.id === routineId ? { ...r, isFavorite: !r.isFavorite } : r
+      );
+      await saveRoutines(updatedRoutines);
+      await loadRoutines();
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      Alert.alert('Error', 'Failed to update favorite');
+    }
+  };
+
+  const handleClearCompleted = () => {
+    const completedCount = completedRoutines.length;
+    if (completedCount === 0) {
+      Alert.alert('No Completed Routines', 'There are no completed routines to clear');
+      return;
+    }
+
+    Alert.alert(
+      'Clear Completed Routines',
+      `Reset ${completedCount} completed routine${completedCount !== 1 ? 's' : ''}? They will become active again.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          onPress: async () => {
+            try {
+              const updatedRoutines = routines.map((r) =>
+                r.completed ? { ...r, completed: false } : r
+              );
+              await saveRoutines(updatedRoutines);
+              await loadRoutines();
+            } catch (error) {
+              console.error('Error clearing completed routines:', error);
+              Alert.alert('Error', 'Failed to clear completed routines');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderRoutine = ({ item }: { item: Routine }) => (
     <Card style={styles.card}>
       <Card.Content>
@@ -196,6 +243,12 @@ export default function RoutinesScreen() {
             )}
           </View>
           <View style={styles.cardActions}>
+            <IconButton
+              icon={item.isFavorite ? 'star' : 'star-outline'}
+              iconColor={item.isFavorite ? Colors.warning : Colors.textSecondary}
+              size={24}
+              onPress={() => toggleFavorite(item.id)}
+            />
             {!item.completed && (
               <IconButton
                 icon="pencil"
@@ -237,6 +290,20 @@ export default function RoutinesScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Favorites Section */}
+        {favoriteRoutines.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                ⭐ Favorites
+              </Text>
+            </View>
+            {favoriteRoutines.map((routine) => (
+              <View key={routine.id}>{renderRoutine({ item: routine })}</View>
+            ))}
+          </View>
+        )}
+
         {/* Active Routines Section */}
         {activeRoutines.length > 0 && (
           <View style={styles.section}>
@@ -252,9 +319,17 @@ export default function RoutinesScreen() {
         {/* Completed Routines Section */}
         {completedRoutines.length > 0 && (
           <View style={styles.section}>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
-              Completed Routines
-            </Text>
+            <View style={styles.sectionHeader}>
+              <Text variant="titleLarge" style={styles.sectionTitle}>
+                Completed Routines
+              </Text>
+              <IconButton
+                icon="broom"
+                size={24}
+                iconColor={Colors.primary}
+                onPress={handleClearCompleted}
+              />
+            </View>
             {completedRoutines.map((routine) => (
               <View key={routine.id}>{renderRoutine({ item: routine })}</View>
             ))}
@@ -262,7 +337,7 @@ export default function RoutinesScreen() {
         )}
 
         {/* Empty State */}
-        {activeRoutines.length === 0 && completedRoutines.length === 0 && (
+        {activeRoutines.length === 0 && completedRoutines.length === 0 && favoriteRoutines.length === 0 && (
           <View style={styles.emptyContainer}>
             <Text variant="headlineSmall" style={styles.emptyTitle}>
               No Routines Yet
@@ -315,6 +390,11 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: Spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   sectionTitle: {
     marginBottom: Spacing.md,

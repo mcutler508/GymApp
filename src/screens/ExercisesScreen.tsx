@@ -131,6 +131,7 @@ export default function ExercisesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(null);
   const [workoutHistory, setWorkoutHistory] = useState<Record<string, any>>({});
+  const [workoutLogs, setWorkoutLogs] = useState<any[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [muscleGroupMenuVisible, setMuscleGroupMenuVisible] = useState(false);
@@ -179,11 +180,43 @@ export default function ExercisesScreen() {
     }
   }, []);
 
+  const loadWorkoutLogs = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem('workoutLogs');
+      if (stored) {
+        setWorkoutLogs(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading workout logs:', error);
+    }
+  }, []);
+
+  const getExerciseStats = (exerciseId: string): { pr: number | null; avg: number | null } => {
+    const exerciseLogs = workoutLogs.filter(log => log.exerciseId === exerciseId);
+
+    if (exerciseLogs.length === 0) {
+      return { pr: null, avg: null };
+    }
+
+    const allSets = exerciseLogs.flatMap(log => log.sets || []);
+
+    if (allSets.length === 0) {
+      return { pr: null, avg: null };
+    }
+
+    const pr = Math.max(...allSets.map(set => set.weight || 0));
+    const totalWeight = allSets.reduce((sum, set) => sum + (set.weight || 0), 0);
+    const avg = Math.round(totalWeight / allSets.length);
+
+    return { pr, avg };
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadExercises();
       loadWorkoutHistory();
-    }, [loadExercises, loadWorkoutHistory])
+      loadWorkoutLogs();
+    }, [loadExercises, loadWorkoutHistory, loadWorkoutLogs])
   );
 
   const saveExercises = async (updatedExercises: Exercise[]) => {
@@ -247,19 +280,14 @@ export default function ExercisesScreen() {
   });
 
   const handleExercisePress = (exercise: Exercise) => {
-    const lastWorkout = workoutHistory[exercise.id];
-    const lastWeight = lastWorkout?.nextWeight || undefined;
-
-    navigation.navigate('ActiveWorkout', {
+    navigation.navigate('ExerciseStats', {
       exerciseId: exercise.id,
       exerciseName: exercise.name,
-      lastWeight,
     });
   };
 
   const renderExercise = ({ item }: { item: Exercise }) => {
-    const lastWorkout = workoutHistory[item.id];
-    const lastWeight = lastWorkout?.nextWeight;
+    const stats = getExerciseStats(item.id);
 
     return (
       <Card style={styles.card} onPress={() => handleExercisePress(item)}>
@@ -267,21 +295,15 @@ export default function ExercisesScreen() {
           <View style={styles.cardHeader}>
             <View style={{ flex: 1 }}>
               <Text variant="titleMedium">{item.name}</Text>
-              {lastWeight && (
-                <Text variant="bodySmall" style={styles.lastWeightText}>
-                  Next: {lastWeight} lbs
+              {stats.pr !== null && stats.avg !== null ? (
+                <Text variant="bodySmall" style={styles.statsText}>
+                  PR: {stats.pr} lbs  •  Avg: {stats.avg} lbs
+                </Text>
+              ) : (
+                <Text variant="bodySmall" style={styles.statsText}>
+                  No History Yet
                 </Text>
               )}
-              <View style={styles.chipContainer}>
-                <Chip mode="outlined" style={styles.chip}>
-                  {item.muscle_group}
-                </Chip>
-                {item.equipment && (
-                  <Chip mode="outlined" style={styles.chip}>
-                    {item.equipment}
-                  </Chip>
-                )}
-              </View>
             </View>
             <IconButton
               icon="delete"
@@ -463,6 +485,10 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     marginTop: Spacing.xs,
     fontWeight: 'bold',
+  },
+  statsText: {
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   chipContainer: {
     flexDirection: 'row',

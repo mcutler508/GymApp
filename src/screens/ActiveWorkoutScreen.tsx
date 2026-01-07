@@ -9,6 +9,7 @@ import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WorkoutTimer from '../components/WorkoutTimer';
 import WeightSlider from '../components/WeightSlider';
+import RepSlider from '../components/RepSlider';
 
 type ActiveWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveWorkout'>;
 type ActiveWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveWorkout'>;
@@ -28,25 +29,25 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   const { exerciseId, exerciseName, lastWeight } = route.params;
   const [sets, setSets] = useState<WorkoutSet[]>([]);
   const [currentWeight, setCurrentWeight] = useState(lastWeight || 0);
-  const [currentReps, setCurrentReps] = useState('');
+  const [currentReps, setCurrentReps] = useState(8); // Default to 8 reps
   const [showDifficultyGrid, setShowDifficultyGrid] = useState(false);
   const [startTime] = useState(Date.now());
   const [duration, setDuration] = useState(0);
 
   const addSet = () => {
     if (!currentWeight || !currentReps) {
-      Alert.alert('Error', 'Please enter both weight and reps');
+      Alert.alert('Error', 'Please set both weight and reps');
       return;
     }
 
     const newSet: WorkoutSet = {
       id: Date.now().toString(),
       weight: currentWeight,
-      reps: parseInt(currentReps),
+      reps: currentReps,
     };
 
     setSets([...sets, newSet]);
-    setCurrentReps('');
+    // Keep both weight and reps for next set (user can adjust if needed)
   };
 
   const removeSet = (id: string) => {
@@ -62,9 +63,9 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   };
 
   const handleDifficultySelection = async (difficulty: DifficultyRating) => {
-    // Calculate new weight based on difficulty
-    const lastWeightValue = lastWeight || currentWeight || 0;
-    const newWeight = calculateNextWeight(lastWeightValue, difficulty);
+    // Calculate new weight based on difficulty (using first set's weight)
+    const firstSetWeight = sets[0]?.weight || 0;
+    const newWeight = calculateNextWeight(firstSetWeight, difficulty);
 
     // Calculate duration
     const endTime = Date.now();
@@ -87,7 +88,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 
     Alert.alert(
       'Workout Complete!',
-      `Great job! Next time try ${newWeight} lbs based on your ${difficulty} rating.`,
+      `Great job! You started at ${firstSetWeight} lbs. Next time try ${newWeight} lbs based on your ${difficulty} rating.`,
       [
         {
           text: 'OK',
@@ -303,13 +304,10 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
               onValueChange={setCurrentWeight}
             />
 
-            <TextInput
+            <RepSlider
               label="Reps"
               value={currentReps}
-              onChangeText={setCurrentReps}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
+              onValueChange={setCurrentReps}
             />
 
             <Button mode="contained" onPress={addSet} style={styles.addButton}>

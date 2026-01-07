@@ -91,6 +91,7 @@ export interface Routine {
   created_at: string;
   last_performed?: string;
   completed?: boolean;
+  isFavorite?: boolean;
 }
 
 // Navigation types
@@ -102,6 +103,7 @@ export type RootStackParamList = {
   Routines: undefined;
   RoutineBuilder: { routineId?: string };
   ExerciseDetail: { exerciseId: string };
+  ExerciseStats: { exerciseId: string; exerciseName: string };
   AddWorkout: { exerciseId: string };
   ActiveWorkout: {
     exerciseId: string;

@@ -117,24 +117,24 @@ export default function TimeBreakdownModal({
       );
     }
 
-    // Prepare chart data
+    // Prepare chart data with distinct, contrasting colors
     const colors = [
-      Colors.primary,
-      '#00cc6a',
-      '#00ffaa',
-      '#33ff99',
-      '#66ff88',
-      '#99ff77',
-      '#ccff66',
-      '#ffff55',
-      '#ffcc44',
+      '#00D9FF', // Bright cyan
+      '#FF6B6B', // Coral red
+      '#4ECDC4', // Turquoise
+      '#FFE66D', // Yellow
+      '#A8E6CF', // Mint green
+      '#FF8B94', // Pink
+      '#C7CEEA', // Lavender
+      '#FFDAC1', // Peach
+      '#B4A7D6', // Purple
     ];
-    
+
     const chartData = breakdown
-      .filter((item) => item.totalTime > 0)
+      .filter((item) => item.exerciseCount > 0)
       .map((item, index) => ({
-        name: getMuscleGroupLabel(item.muscleGroup),
-        population: item.totalTime,
+        name: `${getMuscleGroupLabel(item.muscleGroup)} - ${item.exerciseCount.toLocaleString()}`,
+        population: item.exerciseCount,
         color: colors[index % colors.length],
         legendFontColor: Colors.text,
         legendFontSize: 12,
@@ -165,20 +165,30 @@ export default function TimeBreakdownModal({
           <Card style={styles.chartCard}>
             <Card.Content style={{ padding: Spacing.md }}>
               <Text variant="titleMedium" style={styles.chartTitle}>
-                Distribution by Muscle Group
+                Exercise Count by Muscle Group
               </Text>
-              <View style={{ alignItems: 'center', marginVertical: Spacing.sm }}>
-                <PieChart
-                  data={chartData}
-                  width={Math.min(screenWidth - 96, 350)}
-                  height={220}
-                  chartConfig={chartConfig}
-                  accessor="population"
-                  backgroundColor="transparent"
-                  paddingLeft="15"
-                  absolute
-                  hasLegend
-                />
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: Spacing.sm }}>
+                <View style={{ width: 200 }}>
+                  <PieChart
+                    data={chartData}
+                    width={220}
+                    height={220}
+                    chartConfig={chartConfig}
+                    accessor="population"
+                    backgroundColor="transparent"
+                    paddingLeft="20"
+                    center={[10, 0]}
+                    hasLegend={false}
+                  />
+                </View>
+                <View style={{ flex: 1, marginLeft: Spacing.lg }}>
+                  {chartData.map((item, index) => (
+                    <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm }}>
+                      <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color, marginRight: Spacing.sm }} />
+                      <Text variant="bodyMedium" style={{ color: Colors.text, flex: 1 }}>{item.name}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             </Card.Content>
           </Card>
@@ -201,7 +211,7 @@ export default function TimeBreakdownModal({
                     {formatDuration(item.totalTime)}
                   </Text>
                   <Text variant="bodySmall" style={styles.percentageText}>
-                    {item.percentage.toFixed(1)}% of total • {item.exerciseCount} exercise{item.exerciseCount !== 1 ? 's' : ''}
+                    {item.percentage.toFixed(1)}% of total • {item.exerciseCount.toLocaleString()} exercise{item.exerciseCount !== 1 ? 's' : ''}
                   </Text>
                 </View>
                 <IconButton icon="chevron-right" iconColor={Colors.primary} size={28} />
@@ -270,7 +280,7 @@ export default function TimeBreakdownModal({
                     {formatDuration(exercise.totalTime)}
                   </Text>
                   <Text variant="bodySmall" style={styles.percentageText}>
-                    {exercise.percentage.toFixed(1)}% of group • {exercise.workoutCount} workout{exercise.workoutCount !== 1 ? 's' : ''}
+                    {exercise.percentage.toFixed(1)}% of group • {exercise.workoutCount.toLocaleString()} workout{exercise.workoutCount !== 1 ? 's' : ''}
                   </Text>
                 </View>
               </View>

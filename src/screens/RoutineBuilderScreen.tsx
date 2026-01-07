@@ -33,6 +33,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const [selectedExerciseToAdd, setSelectedExerciseToAdd] = useState<Exercise | null>(null);
   const [selectedExerciseToEdit, setSelectedExerciseToEdit] = useState<RoutineExercise | null>(null);
   const [weightInput, setWeightInput] = useState<number>(0);
+  const [workoutLogs, setWorkoutLogs] = useState<any[]>([]);
 
   // Exercise picker filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,6 +41,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
 
   useEffect(() => {
     loadExercises();
+    loadWorkoutLogs();
     if (isEditing) {
       loadRoutine();
     }
@@ -53,6 +55,17 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
       }
     } catch (error) {
       console.error('Error loading exercises:', error);
+    }
+  };
+
+  const loadWorkoutLogs = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('workoutLogs');
+      if (stored) {
+        setWorkoutLogs(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading workout logs:', error);
     }
   };
 
@@ -70,6 +83,31 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
     } catch (error) {
       console.error('Error loading routine:', error);
     }
+  };
+
+  const getExerciseStats = (exerciseId: string): { pr: number | null; avg: number | null } => {
+    // Filter logs for this exercise
+    const exerciseLogs = workoutLogs.filter(log => log.exerciseId === exerciseId);
+
+    if (exerciseLogs.length === 0) {
+      return { pr: null, avg: null };
+    }
+
+    // Get all sets from all logs
+    const allSets = exerciseLogs.flatMap(log => log.sets || []);
+
+    if (allSets.length === 0) {
+      return { pr: null, avg: null };
+    }
+
+    // Calculate PR (max weight)
+    const pr = Math.max(...allSets.map(set => set.weight || 0));
+
+    // Calculate average weight across all sets
+    const totalWeight = allSets.reduce((sum, set) => sum + (set.weight || 0), 0);
+    const avg = Math.round(totalWeight / allSets.length);
+
+    return { pr, avg };
   };
 
   const filteredExercises = availableExercises.filter((exercise) => {
@@ -244,23 +282,26 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
     </Card>
   );
 
-  const renderAvailableExercise = ({ item }: { item: Exercise }) => (
-    <Card style={styles.exerciseCard} onPress={() => handleSelectExercise(item)}>
-      <Card.Content>
-        <Text variant="bodyLarge">{item.name}</Text>
-        <View style={styles.chipContainer}>
-          <Chip mode="outlined" style={styles.chip}>
-            <Text>{item.muscle_group}</Text>
-          </Chip>
-          {item.equipment && (
-            <Chip mode="outlined" style={styles.chip}>
-              <Text>{item.equipment}</Text>
-            </Chip>
+  const renderAvailableExercise = ({ item }: { item: Exercise }) => {
+    const stats = getExerciseStats(item.id);
+
+    return (
+      <Card style={styles.exerciseCard} onPress={() => handleSelectExercise(item)}>
+        <Card.Content>
+          <Text variant="bodyLarge">{item.name}</Text>
+          {stats.pr !== null && stats.avg !== null ? (
+            <Text variant="bodySmall" style={styles.statsText}>
+              PR: {stats.pr} lbs  •  Avg: {stats.avg} lbs
+            </Text>
+          ) : (
+            <Text variant="bodySmall" style={styles.statsText}>
+              No History Yet
+            </Text>
           )}
-        </View>
-      </Card.Content>
-    </Card>
-  );
+        </Card.Content>
+      </Card>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -457,6 +498,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   muscleGroup: {
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  statsText: {
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
