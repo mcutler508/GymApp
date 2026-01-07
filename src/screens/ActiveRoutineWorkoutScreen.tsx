@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WorkoutTimer from '../components/WorkoutTimer';
+import WeightSlider from '../components/WeightSlider';
 
 type ActiveRoutineWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveRoutineWorkout'>;
 type ActiveRoutineWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveRoutineWorkout'>;
@@ -27,7 +28,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
   const [showDifficultyGrid, setShowDifficultyGrid] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<RoutineExercise | null>(null);
   const [showWeightDialog, setShowWeightDialog] = useState(false);
-  const [weightInput, setWeightInput] = useState('');
+  const [weightInput, setWeightInput] = useState<number>(0);
   const [exerciseToAdjust, setExerciseToAdjust] = useState<RoutineExercise | null>(null);
   const [sessionId] = useState(`routine-session-${Date.now()}`);
   const [sessionStartTime] = useState(Date.now());
@@ -99,18 +100,14 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
       return;
     }
     setExerciseToAdjust(exercise);
-    setWeightInput((exercise.currentWeight || exercise.startingWeight || 0).toString());
+    setWeightInput(exercise.currentWeight || exercise.startingWeight || 0);
     setShowWeightDialog(true);
   };
 
   const handleSaveWeight = async () => {
     if (!exerciseToAdjust || !routine) return;
 
-    const newWeight = weightInput.trim() ? parseFloat(weightInput) : undefined;
-    if (newWeight !== undefined && (isNaN(newWeight) || newWeight < 0)) {
-      Alert.alert('Invalid Weight', 'Please enter a valid weight value');
-      return;
-    }
+    const newWeight = weightInput > 0 ? weightInput : undefined;
 
     // Update the exercise weight in the routine
     const updatedExercises = routine.exercises.map((ex) =>
@@ -140,7 +137,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
 
     setShowWeightDialog(false);
     setExerciseToAdjust(null);
-    setWeightInput('');
+    setWeightInput(0);
   };
 
   const calculateNextWeight = (currentWeight: number, difficulty: DifficultyRating): number => {
@@ -537,14 +534,10 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
             <Text variant="bodyMedium" style={styles.dialogSubtitle}>
               {exerciseToAdjust?.exerciseName}
             </Text>
-            <TextInput
+            <WeightSlider
               label="Weight (lbs)"
               value={weightInput}
-              onChangeText={setWeightInput}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.weightInput}
-              placeholder="Enter weight"
+              onValueChange={setWeightInput}
             />
           </Dialog.Content>
           <Dialog.Actions>

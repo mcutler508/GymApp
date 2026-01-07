@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WorkoutTimer from '../components/WorkoutTimer';
+import WeightSlider from '../components/WeightSlider';
 
 type ActiveWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveWorkout'>;
 type ActiveWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveWorkout'>;
@@ -26,7 +27,7 @@ interface WorkoutSet {
 export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   const { exerciseId, exerciseName, lastWeight } = route.params;
   const [sets, setSets] = useState<WorkoutSet[]>([]);
-  const [currentWeight, setCurrentWeight] = useState(lastWeight?.toString() || '');
+  const [currentWeight, setCurrentWeight] = useState(lastWeight || 0);
   const [currentReps, setCurrentReps] = useState('');
   const [showDifficultyGrid, setShowDifficultyGrid] = useState(false);
   const [startTime] = useState(Date.now());
@@ -40,7 +41,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 
     const newSet: WorkoutSet = {
       id: Date.now().toString(),
-      weight: parseFloat(currentWeight),
+      weight: currentWeight,
       reps: parseInt(currentReps),
     };
 
@@ -62,7 +63,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 
   const handleDifficultySelection = async (difficulty: DifficultyRating) => {
     // Calculate new weight based on difficulty
-    const lastWeightValue = lastWeight || parseFloat(currentWeight) || 0;
+    const lastWeightValue = lastWeight || currentWeight || 0;
     const newWeight = calculateNextWeight(lastWeightValue, difficulty);
 
     // Calculate duration
@@ -296,13 +297,10 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
               Add Set
             </Text>
 
-            <TextInput
+            <WeightSlider
               label="Weight (lbs)"
               value={currentWeight}
-              onChangeText={setCurrentWeight}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.input}
+              onValueChange={setCurrentWeight}
             />
 
             <TextInput

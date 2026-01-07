@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, Alert, ScrollView } from 'react-native';
 import { Text, TextInput, Button, Card, Chip, IconButton, Portal, Modal, Searchbar, Dialog } from 'react-native-paper';
 import { Colors, Spacing, MuscleGroups } from '../constants/theme';
 import { Routine, RoutineExercise, Exercise, MuscleGroup } from '../types';
+import WeightSlider from '../components/WeightSlider';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
@@ -31,7 +32,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedExerciseToAdd, setSelectedExerciseToAdd] = useState<Exercise | null>(null);
   const [selectedExerciseToEdit, setSelectedExerciseToEdit] = useState<RoutineExercise | null>(null);
-  const [weightInput, setWeightInput] = useState('');
+  const [weightInput, setWeightInput] = useState<number>(0);
 
   // Exercise picker filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,7 +88,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const handleAddExerciseWithWeight = () => {
     if (!selectedExerciseToAdd) return;
 
-    const weight = weightInput.trim() ? parseFloat(weightInput) : undefined;
+    const weight = weightInput > 0 ? weightInput : undefined;
 
     const newRoutineExercise: RoutineExercise = {
       id: Date.now().toString(),
@@ -101,7 +102,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
 
     setSelectedExercises([...selectedExercises, newRoutineExercise]);
     setShowWeightDialog(false);
-    setWeightInput('');
+    setWeightInput(0);
     setSelectedExerciseToAdd(null);
   };
 
@@ -134,7 +135,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
     const exercise = selectedExercises.find((e) => e.id === exerciseId);
     if (exercise) {
       setSelectedExerciseToEdit(exercise);
-      setWeightInput(exercise.currentWeight?.toString() || '');
+      setWeightInput(exercise.currentWeight || 0);
       setShowEditDialog(true);
     }
   };
@@ -142,11 +143,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const handleSaveEditedWeight = () => {
     if (!selectedExerciseToEdit) return;
 
-    const weight = weightInput.trim() ? parseFloat(weightInput) : undefined;
-    if (weight !== undefined && (isNaN(weight) || weight < 0)) {
-      Alert.alert('Invalid Weight', 'Please enter a valid weight value');
-      return;
-    }
+    const weight = weightInput > 0 ? weightInput : undefined;
 
     const updated = selectedExercises.map((e) =>
       e.id === selectedExerciseToEdit.id
@@ -155,7 +152,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
     );
     setSelectedExercises(updated);
     setShowEditDialog(false);
-    setWeightInput('');
+    setWeightInput(0);
     setSelectedExerciseToEdit(null);
   };
 
@@ -385,14 +382,10 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
             <Text variant="bodyMedium" style={styles.dialogSubtitle}>
               {selectedExerciseToAdd?.name}
             </Text>
-            <TextInput
+            <WeightSlider
               label="Weight (lbs) - Optional"
               value={weightInput}
-              onChangeText={setWeightInput}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.weightInput}
-              placeholder="Leave blank if unsure"
+              onValueChange={setWeightInput}
             />
           </Dialog.Content>
           <Dialog.Actions>
@@ -410,14 +403,10 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
             <Text variant="bodyMedium" style={styles.dialogSubtitle}>
               {selectedExerciseToEdit?.exerciseName}
             </Text>
-            <TextInput
+            <WeightSlider
               label="Weight (lbs)"
               value={weightInput}
-              onChangeText={setWeightInput}
-              keyboardType="numeric"
-              mode="outlined"
-              style={styles.weightInput}
-              placeholder="Enter weight"
+              onValueChange={setWeightInput}
             />
           </Dialog.Content>
           <Dialog.Actions>
