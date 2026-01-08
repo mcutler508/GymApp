@@ -6,3 +6,5 @@ export default function StatusBarWrapper() {
   const { resolvedMode } = useTheme();
   return <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />;
 }
+
+

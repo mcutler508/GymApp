@@ -616,7 +616,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
           <Card style={styles.inputCard}>
             <Card.Content>
               <Text variant="titleMedium" style={styles.inputTitle}>
-                Adjust weight and reps
+                Weight and reps for set. Click Add Set for next.
               </Text>
 
               <WeightSlider
