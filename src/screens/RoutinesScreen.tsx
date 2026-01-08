@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, Card, FAB, Portal, IconButton, Dialog, Button } from 'react-native-paper';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
 import { Routine } from '../types';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../context/ThemeProvider';
 
 type NavigationProp = StackNavigationProp<any>;
 
@@ -25,6 +26,7 @@ interface WorkoutLog {
 
 export default function RoutinesScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
   const [routines, setRoutines] = useState<Routine[]>([]);
   const [favoriteRoutines, setFavoriteRoutines] = useState<Routine[]>([]);
   const [activeRoutines, setActiveRoutines] = useState<Routine[]>([]);
@@ -228,16 +230,16 @@ export default function RoutinesScreen() {
   };
 
   const renderRoutine = ({ item }: { item: Routine }) => (
-    <Card style={styles.card}>
+    <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
       <Card.Content>
         <View style={styles.cardHeader}>
           <View style={{ flex: 1 }}>
             <Text variant="titleLarge">{item.name}</Text>
-            <Text variant="bodySmall" style={styles.exerciseCount}>
+            <Text variant="bodySmall" style={[styles.exerciseCount, { color: theme.colors.primary }]}>
               {item.exercises.length} exercise{item.exercises.length !== 1 ? 's' : ''}
             </Text>
             {item.last_performed && (
-              <Text variant="bodySmall" style={styles.lastPerformed}>
+              <Text variant="bodySmall" style={[styles.lastPerformed, { color: theme.colors.textSecondary }]}>
                 Last: {new Date(item.last_performed).toLocaleDateString()}
               </Text>
             )}
@@ -245,7 +247,7 @@ export default function RoutinesScreen() {
           <View style={styles.cardActions}>
             <IconButton
               icon={item.isFavorite ? 'star' : 'star-outline'}
-              iconColor={item.isFavorite ? Colors.warning : Colors.textSecondary}
+              iconColor={item.isFavorite ? theme.colors.warning : theme.colors.textSecondary}
               size={24}
               onPress={() => toggleFavorite(item.id)}
             />
@@ -258,7 +260,7 @@ export default function RoutinesScreen() {
             )}
             <IconButton
               icon="delete"
-              iconColor={Colors.error}
+              iconColor={theme.colors.error}
               size={20}
               onPress={() => handleDeleteRoutine(item.id)}
             />
@@ -269,7 +271,7 @@ export default function RoutinesScreen() {
         {item.completed ? (
           <IconButton
             icon="content-copy"
-            iconColor={Colors.secondary}
+            iconColor={theme.colors.secondary}
             size={28}
             onPress={() => handleDuplicateRoutine(item)}
             style={styles.duplicateButton}
@@ -277,7 +279,7 @@ export default function RoutinesScreen() {
         ) : (
           <IconButton
             icon="play-circle"
-            iconColor={Colors.primary}
+            iconColor={theme.colors.primary}
             size={32}
             onPress={() => handleStartWorkout(item)}
             style={styles.playButton}
@@ -288,13 +290,13 @@ export default function RoutinesScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Favorites Section */}
         {favoriteRoutines.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
+              <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text }]}>
                 ⭐ Favorites
               </Text>
             </View>
@@ -307,7 +309,7 @@ export default function RoutinesScreen() {
         {/* Active Routines Section */}
         {activeRoutines.length > 0 && (
           <View style={styles.section}>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
+            <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text }]}>
               Active Routines
             </Text>
             {activeRoutines.map((routine) => (
@@ -320,13 +322,13 @@ export default function RoutinesScreen() {
         {completedRoutines.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
+              <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text }]}>
                 Completed Routines
               </Text>
               <IconButton
                 icon="broom"
                 size={24}
-                iconColor={Colors.primary}
+                iconColor={theme.colors.primary}
                 onPress={handleClearCompleted}
               />
             </View>
@@ -342,7 +344,7 @@ export default function RoutinesScreen() {
             <Text variant="headlineSmall" style={styles.emptyTitle}>
               No Routines Yet
             </Text>
-            <Text variant="bodyLarge" style={styles.emptyText}>
+            <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
               Create a routine to get started with your workouts
             </Text>
           </View>
@@ -382,7 +384,6 @@ export default function RoutinesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     padding: Spacing.md,
@@ -399,11 +400,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: Spacing.md,
     fontWeight: 'bold',
-    color: Colors.text,
   },
   card: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   cardHeader: {
@@ -414,12 +413,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   exerciseCount: {
-    color: Colors.primary,
     marginTop: Spacing.sm,
     fontWeight: 'bold',
   },
   lastPerformed: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   cardActionsRow: {
@@ -447,7 +444,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   emptyText: {
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
   fab: {

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Text, Card, Searchbar, Chip, FAB, Portal, Modal, TextInput, Button, Menu, IconButton } from 'react-native-paper';
-import { Colors, Spacing, MuscleGroups } from '../constants/theme';
+import { Spacing, MuscleGroups } from '../constants/theme';
 import { MuscleGroup, Exercise } from '../types';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../context/ThemeProvider';
 
 type NavigationProp = StackNavigationProp<any>;
 
@@ -128,6 +129,7 @@ const EXERCISES_STORAGE_KEY = 'exercises';
 
 export default function ExercisesScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | null>(null);
   const [workoutHistory, setWorkoutHistory] = useState<Record<string, any>>({});
@@ -290,24 +292,24 @@ export default function ExercisesScreen() {
     const stats = getExerciseStats(item.id);
 
     return (
-      <Card style={styles.card} onPress={() => handleExercisePress(item)}>
+      <Card style={[styles.card, { backgroundColor: theme.colors.card }]} onPress={() => handleExercisePress(item)}>
         <Card.Content>
           <View style={styles.cardHeader}>
             <View style={{ flex: 1 }}>
               <Text variant="titleMedium">{item.name}</Text>
               {stats.pr !== null && stats.avg !== null ? (
-                <Text variant="bodySmall" style={styles.statsText}>
+                <Text variant="bodySmall" style={[styles.statsText, { color: theme.colors.textSecondary }]}>
                   PR: {stats.pr} lbs  •  Avg: {stats.avg} lbs
                 </Text>
               ) : (
-                <Text variant="bodySmall" style={styles.statsText}>
+                <Text variant="bodySmall" style={[styles.statsText, { color: theme.colors.textSecondary }]}>
                   No History Yet
                 </Text>
               )}
             </View>
             <IconButton
               icon="delete"
-              iconColor={Colors.error}
+              iconColor={theme.colors.error}
               size={20}
               onPress={() => handleDeleteExercise(item.id)}
             />
@@ -318,7 +320,7 @@ export default function ExercisesScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Searchbar
         placeholder="Search exercises..."
         onChangeText={setSearchQuery}
@@ -372,7 +374,7 @@ export default function ExercisesScreen() {
         <Modal
           visible={modalVisible}
           onDismiss={() => setModalVisible(false)}
-          contentContainerStyle={styles.modalContainer}
+          contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.card }]}
         >
           <Text variant="headlineSmall" style={styles.modalTitle}>
             Add New Exercise
@@ -456,7 +458,6 @@ export default function ExercisesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   searchbar: {
     margin: Spacing.md,
@@ -474,7 +475,6 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   cardHeader: {
@@ -482,12 +482,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   lastWeightText: {
-    color: Colors.primary,
     marginTop: Spacing.xs,
     fontWeight: 'bold',
   },
   statsText: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   chipContainer: {
@@ -508,7 +506,6 @@ const styles = StyleSheet.create({
     bottom: Spacing.md,
   },
   modalContainer: {
-    backgroundColor: Colors.card,
     padding: Spacing.lg,
     margin: Spacing.lg,
     borderRadius: 12,

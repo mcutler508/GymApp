@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
 import { Text, Card, Chip, IconButton } from 'react-native-paper';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { formatDuration } from '../utils/timeFormat';
+import { useTheme } from '../context/ThemeProvider';
 
 type NavigationProp = StackNavigationProp<any>;
 
@@ -41,6 +42,7 @@ interface WorkoutSession {
 
 export default function WorkoutLogScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
   const [sessions, setSessions] = useState<WorkoutSession[]>([]);
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
 
@@ -165,7 +167,7 @@ export default function WorkoutLogScreen() {
       case 'expert':
         return '#e91e63';
       default:
-        return Colors.textSecondary;
+        return theme.colors.textSecondary;
     }
   };
 
@@ -174,15 +176,15 @@ export default function WorkoutLogScreen() {
     const sessionDate = new Date(item.date);
 
     return (
-      <Card style={styles.sessionCard}>
+      <Card style={[styles.sessionCard, { backgroundColor: theme.colors.card }]}>
         <TouchableOpacity onPress={() => toggleSession(item.sessionId)}>
           <Card.Content>
             <View style={styles.sessionHeader}>
               <View style={{ flex: 1 }}>
-                <Text variant="titleLarge" style={styles.sessionTitle}>
+                <Text variant="titleLarge" style={[styles.sessionTitle, { color: theme.colors.primary }]}>
                   {item.routineName || 'Workout Session'}
                 </Text>
-                <Text variant="bodySmall" style={styles.sessionDate}>
+                <Text variant="bodySmall" style={[styles.sessionDate, { color: theme.colors.textSecondary }]}>
                   {sessionDate.toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
@@ -201,36 +203,36 @@ export default function WorkoutLogScreen() {
                 />
                 <IconButton
                   icon="delete"
-                  iconColor={Colors.error}
+                  iconColor={theme.colors.error}
                   size={20}
                   onPress={() => handleDeleteSession(item)}
                 />
               </View>
             </View>
 
-            <View style={styles.statsRow}>
+            <View style={[styles.statsRow, { borderTopColor: theme.colors.border }]}>
               <View style={styles.statBadge}>
-                <Text variant="bodySmall" style={styles.statLabel}>Exercises</Text>
-                <Text variant="titleMedium" style={styles.statValue}>
+                <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Exercises</Text>
+                <Text variant="titleMedium" style={[styles.statValue, { color: theme.colors.primary }]}>
                   {item.totalExercises}
                 </Text>
               </View>
               <View style={styles.statBadge}>
-                <Text variant="bodySmall" style={styles.statLabel}>Sets</Text>
-                <Text variant="titleMedium" style={styles.statValue}>
+                <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Sets</Text>
+                <Text variant="titleMedium" style={[styles.statValue, { color: theme.colors.primary }]}>
                   {item.totalSets}
                 </Text>
               </View>
               <View style={styles.statBadge}>
-                <Text variant="bodySmall" style={styles.statLabel}>Volume</Text>
-                <Text variant="titleMedium" style={styles.statValue}>
+                <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Volume</Text>
+                <Text variant="titleMedium" style={[styles.statValue, { color: theme.colors.primary }]}>
                   {item.totalVolume.toLocaleString()}
                 </Text>
               </View>
               {item.totalDuration && (
                 <View style={styles.statBadge}>
-                  <Text variant="bodySmall" style={styles.statLabel}>Time</Text>
-                  <Text variant="titleMedium" style={[styles.statValue, { color: Colors.primary }]}>
+                  <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Time</Text>
+                  <Text variant="titleMedium" style={[styles.statValue, { color: theme.colors.primary }]}>
                     {formatDuration(item.totalDuration)}
                   </Text>
                 </View>
@@ -241,7 +243,7 @@ export default function WorkoutLogScreen() {
 
         {isExpanded && (
           <Card.Content style={styles.exercisesContainer}>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             {item.exercises.map((exercise, index) => {
               const hasReps = exercise.sets.some((set) => set.reps > 0);
               const exerciseVolume = exercise.sets.reduce(
@@ -250,7 +252,7 @@ export default function WorkoutLogScreen() {
               );
 
               return (
-                <View key={exercise.id} style={styles.exerciseItem}>
+                <View key={exercise.id} style={[styles.exerciseItem, { borderBottomColor: theme.colors.border + '40' }]}>
                   <View style={styles.exerciseHeader}>
                     <Text variant="titleMedium" style={styles.exerciseName}>
                       {index + 1}. {exercise.exerciseName}
@@ -258,7 +260,7 @@ export default function WorkoutLogScreen() {
                     <Chip
                       mode="flat"
                       textStyle={{ 
-                        color: Colors.text, 
+                        color: theme.colors.text, 
                         fontSize: 11,
                         fontWeight: '600',
                         lineHeight: 14,
@@ -274,7 +276,7 @@ export default function WorkoutLogScreen() {
 
                   <View style={styles.setsContainer}>
                     {exercise.sets.map((set, setIndex) => (
-                      <Text key={setIndex} variant="bodyMedium" style={styles.setText}>
+                      <Text key={setIndex} variant="bodyMedium" style={[styles.setText, { color: theme.colors.text }]}>
                         {hasReps
                           ? `Set ${setIndex + 1}: ${set.weight} lbs × ${set.reps} reps`
                           : `Weight: ${set.weight} lbs`}
@@ -284,11 +286,11 @@ export default function WorkoutLogScreen() {
 
                   <View style={styles.exerciseFooter}>
                     {hasReps && (
-                      <Text variant="bodySmall" style={styles.footerText}>
+                      <Text variant="bodySmall" style={[styles.footerText, { color: theme.colors.textSecondary }]}>
                         Volume: {exerciseVolume} lbs
                       </Text>
                     )}
-                    <Text variant="bodySmall" style={styles.footerText}>
+                    <Text variant="bodySmall" style={[styles.footerText, { color: theme.colors.textSecondary }]}>
                       Next: {exercise.nextWeight} lbs
                     </Text>
                   </View>
@@ -302,7 +304,7 @@ export default function WorkoutLogScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
         data={sessions}
         renderItem={renderSession}
@@ -311,7 +313,7 @@ export default function WorkoutLogScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text variant="bodyLarge">No workout logs yet</Text>
-            <Text variant="bodyMedium" style={styles.emptySubtext}>
+            <Text variant="bodyMedium" style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
               Complete a workout to see your history here
             </Text>
           </View>
@@ -324,7 +326,6 @@ export default function WorkoutLogScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   list: {
     padding: Spacing.md,
@@ -332,7 +333,6 @@ const styles = StyleSheet.create({
   sessionCard: {
     marginBottom: Spacing.md,
     elevation: 2,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   sessionHeader: {
@@ -349,10 +349,8 @@ const styles = StyleSheet.create({
   },
   sessionTitle: {
     fontWeight: 'bold',
-    color: Colors.primary,
   },
   sessionDate: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   statsRow: {
@@ -361,25 +359,21 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   statBadge: {
     alignItems: 'center',
     flex: 1,
   },
   statLabel: {
-    color: Colors.textSecondary,
     fontSize: 11,
     textTransform: 'uppercase',
   },
   statValue: {
     fontWeight: 'bold',
-    color: Colors.primary,
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
     marginVertical: Spacing.md,
   },
   exercisesContainer: {
@@ -389,7 +383,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border + '40',
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -413,7 +406,6 @@ const styles = StyleSheet.create({
   },
   setText: {
     paddingVertical: 2,
-    color: Colors.text,
   },
   exerciseFooter: {
     flexDirection: 'row',
@@ -422,7 +414,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xs,
   },
   footerText: {
-    color: Colors.textSecondary,
     fontWeight: '600',
   },
   emptyContainer: {
@@ -432,7 +423,6 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     marginTop: Spacing.sm,
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
 });

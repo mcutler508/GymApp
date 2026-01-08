@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View, ActivityIndicator } from 'react-native';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LightTheme, DarkTheme, Theme, ThemeMode } from '../constants/theme';
@@ -91,9 +91,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     isSystem,
   };
 
-  // Don't render until theme is loaded to avoid flash
+  // Show loading indicator while theme is being loaded
   if (!isHydrated) {
-    return null;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: LightTheme.colors.background }}>
+        <ActivityIndicator size="large" color={LightTheme.colors.primary} />
+      </View>
+    );
   }
 
   return (

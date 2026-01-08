@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, Card, IconButton } from 'react-native-paper';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
 import { DifficultyRating } from '../types';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import WorkoutTimer from '../components/WorkoutTimer';
 import WeightSlider from '../components/WeightSlider';
 import RepSlider from '../components/RepSlider';
+import { useTheme } from '../context/ThemeProvider';
 
 type ActiveWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveWorkout'>;
 type ActiveWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveWorkout'>;
@@ -27,6 +28,7 @@ interface WorkoutSet {
 
 export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   const { exerciseId, exerciseName, lastWeight } = route.params;
+  const { theme } = useTheme();
   const [sets, setSets] = useState<WorkoutSet[]>([]);
   const [currentWeight, setCurrentWeight] = useState(lastWeight || 0);
   const [currentReps, setCurrentReps] = useState(8); // Default to 8 reps
@@ -182,46 +184,46 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 
   if (showDifficultyGrid) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text variant="headlineMedium" style={styles.title}>
+          <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.text }]}>
             How was your workout?
           </Text>
-          <Text variant="bodyLarge" style={styles.subtitle}>
+          <Text variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
             Rate the difficulty to adjust your next weight
           </Text>
 
           <View style={styles.difficultyGrid}>
             <View style={styles.difficultyRow}>
               <Card
-                style={[styles.difficultyCard, styles.easyCard]}
+                style={[styles.difficultyCard, styles.easyCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]}
                 onPress={() => handleDifficultySelection('easy')}
               >
                 <Card.Content style={styles.difficultyContent}>
                   <Text variant="headlineSmall" style={styles.difficultyEmoji}>
                     😊
                   </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
+                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
                     Easy
                   </Text>
-                  <Text variant="bodySmall" style={styles.difficultyDesc}>
+                  <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     +10% weight
                   </Text>
                 </Card.Content>
               </Card>
 
               <Card
-                style={[styles.difficultyCard, styles.normalCard]}
+                style={[styles.difficultyCard, styles.normalCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
                 onPress={() => handleDifficultySelection('normal')}
               >
                 <Card.Content style={styles.difficultyContent}>
                   <Text variant="headlineSmall" style={styles.difficultyEmoji}>
                     💪
                   </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
+                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
                     Normal
                   </Text>
-                  <Text variant="bodySmall" style={styles.difficultyDesc}>
+                  <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     +5% weight
                   </Text>
                 </Card.Content>
@@ -230,34 +232,34 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 
             <View style={styles.difficultyRow}>
               <Card
-                style={[styles.difficultyCard, styles.hardCard]}
+                style={[styles.difficultyCard, styles.hardCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
                 onPress={() => handleDifficultySelection('hard')}
               >
                 <Card.Content style={styles.difficultyContent}>
                   <Text variant="headlineSmall" style={styles.difficultyEmoji}>
                     😅
                   </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
+                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
                     Hard
                   </Text>
-                  <Text variant="bodySmall" style={styles.difficultyDesc}>
+                  <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     Same weight
                   </Text>
                 </Card.Content>
               </Card>
 
               <Card
-                style={[styles.difficultyCard, styles.expertCard]}
+                style={[styles.difficultyCard, styles.expertCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
                 onPress={() => handleDifficultySelection('expert')}
               >
                 <Card.Content style={styles.difficultyContent}>
                   <Text variant="headlineSmall" style={styles.difficultyEmoji}>
                     🔥
                   </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
+                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
                     Expert
                   </Text>
-                  <Text variant="bodySmall" style={styles.difficultyDesc}>
+                  <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     -5% weight
                   </Text>
                 </Card.Content>
@@ -278,21 +280,21 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <WorkoutTimer startTime={startTime} onDurationChange={setDuration} />
 
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.text }]}>
           {exerciseName}
         </Text>
 
         {lastWeight && (
-          <Text variant="bodyMedium" style={styles.lastWeight}>
+          <Text variant="bodyMedium" style={[styles.lastWeight, { color: theme.colors.primary }]}>
             Last weight: {lastWeight} lbs
           </Text>
         )}
 
-        <Card style={styles.inputCard}>
+        <Card style={[styles.inputCard, { backgroundColor: theme.colors.card }]}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.inputTitle}>
               Add Set
@@ -317,14 +319,14 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
         </Card>
 
         {sets.length > 0 && (
-          <Card style={styles.setsCard}>
+          <Card style={[styles.setsCard, { backgroundColor: theme.colors.card }]}>
             <Card.Content>
               <Text variant="titleMedium" style={styles.setsTitle}>
                 Sets Completed ({sets.length})
               </Text>
 
               {sets.map((set, index) => (
-                <View key={set.id} style={styles.setRow}>
+                <View key={set.id} style={[styles.setRow, { borderBottomColor: theme.colors.border }]}>
                   <Text variant="bodyLarge">
                     Set {index + 1}: {set.weight} lbs × {set.reps} reps
                   </Text>
@@ -355,7 +357,6 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     padding: Spacing.md,
@@ -363,22 +364,18 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: Spacing.sm,
     textAlign: 'center',
-    color: Colors.text,
   },
   subtitle: {
     textAlign: 'center',
-    color: Colors.textSecondary,
     marginBottom: Spacing.lg,
   },
   lastWeight: {
     textAlign: 'center',
-    color: Colors.primary,
     marginBottom: Spacing.md,
     fontWeight: 'bold',
   },
   inputCard: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   inputTitle: {
@@ -392,7 +389,6 @@ const styles = StyleSheet.create({
   },
   setsCard: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   setsTitle: {
@@ -404,7 +400,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xs,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   completeButton: {
     marginTop: Spacing.md,
@@ -422,8 +417,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: Spacing.xs,
     elevation: 4,
-    backgroundColor: Colors.card,
     borderRadius: 12,
+    borderWidth: 1,
   },
   difficultyContent: {
     alignItems: 'center',
@@ -436,31 +431,18 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
-    color: Colors.text,
   },
   difficultyDesc: {
-    color: Colors.textSecondary,
     fontSize: 12,
   },
   easyCard: {
-    backgroundColor: Colors.card,
     borderWidth: 2,
-    borderColor: Colors.primary,
   },
   normalCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   hardCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   expertCard: {
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
   backButton: {
     marginTop: Spacing.md,

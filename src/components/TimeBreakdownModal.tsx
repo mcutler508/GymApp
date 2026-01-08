@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { Text, Card, IconButton, ProgressBar, Portal, Modal } from 'react-native-paper';
 import { PieChart } from 'react-native-chart-kit';
-import { Colors, Spacing, MuscleGroups } from '../constants/theme';
+import { Spacing, MuscleGroups } from '../constants/theme';
 import { MuscleGroup } from '../types';
 import { formatDuration } from '../utils/timeFormat';
 import {
@@ -10,6 +10,7 @@ import {
   MuscleGroupTimeBreakdown,
   ExerciseTimeBreakdown,
 } from '../utils/timeBreakdown';
+import { useTheme } from '../context/ThemeProvider';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -42,6 +43,7 @@ export default function TimeBreakdownModal({
   title,
   filterType = 'total',
 }: TimeBreakdownModalProps) {
+  const { theme } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('muscleGroups');
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<SelectedMuscleGroup>(null);
 
@@ -110,7 +112,7 @@ export default function TimeBreakdownModal({
     if (breakdown.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text variant="bodyLarge" style={styles.emptyText}>
+          <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.text }]}>
             No workout time data available
           </Text>
         </View>
@@ -136,17 +138,17 @@ export default function TimeBreakdownModal({
         name: `${getMuscleGroupLabel(item.muscleGroup)} - ${item.exerciseCount.toLocaleString()}`,
         population: item.exerciseCount,
         color: colors[index % colors.length],
-        legendFontColor: Colors.text,
+        legendFontColor: theme.colors.text,
         legendFontSize: 12,
       }));
 
     const chartConfig = {
-      backgroundColor: Colors.surface,
-      backgroundGradientFrom: Colors.surface,
-      backgroundGradientTo: Colors.surface,
+      backgroundColor: theme.colors.surface,
+      backgroundGradientFrom: theme.colors.surface,
+      backgroundGradientTo: theme.colors.surface,
       decimalPlaces: 0,
       color: (opacity = 1) => `rgba(0, 255, 136, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+      labelColor: (opacity = 1) => theme.colors.textSecondary,
       style: {
         borderRadius: 16,
       },
@@ -157,14 +159,14 @@ export default function TimeBreakdownModal({
 
     return (
       <ScrollView 
-        style={styles.scrollContent}
+        style={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={{ paddingBottom: Spacing.xl }}
         showsVerticalScrollIndicator={true}
       >
         {totalTime > 0 && chartData.length > 0 && (
-          <Card style={styles.chartCard}>
+          <Card style={[styles.chartCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
             <Card.Content style={{ padding: Spacing.md }}>
-              <Text variant="titleMedium" style={styles.chartTitle}>
+              <Text variant="titleMedium" style={[styles.chartTitle, { color: theme.colors.text }]}>
                 Exercise Count by Muscle Group
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: Spacing.sm }}>
@@ -185,7 +187,7 @@ export default function TimeBreakdownModal({
                   {chartData.map((item, index) => (
                     <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm }}>
                       <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: item.color, marginRight: Spacing.sm }} />
-                      <Text variant="bodyMedium" style={{ color: Colors.text, flex: 1 }}>{item.name}</Text>
+                      <Text variant="bodyMedium" style={{ color: theme.colors.text, flex: 1 }}>{item.name}</Text>
                     </View>
                   ))}
                 </View>
@@ -197,29 +199,29 @@ export default function TimeBreakdownModal({
         {breakdown.map((item) => (
           <Card
             key={item.muscleGroup}
-            style={styles.muscleGroupCard}
+            style={[styles.muscleGroupCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}
             onPress={() => handleMuscleGroupPress(item.muscleGroup)}
             mode="elevated"
           >
             <Card.Content style={{ padding: Spacing.md }}>
               <View style={styles.muscleGroupHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text variant="titleLarge" style={styles.muscleGroupName}>
+                  <Text variant="titleLarge" style={[styles.muscleGroupName, { color: theme.colors.text }]}>
                     {getMuscleGroupLabel(item.muscleGroup)}
                   </Text>
-                  <Text variant="headlineMedium" style={styles.timeText}>
+                  <Text variant="headlineMedium" style={[styles.timeText, { color: theme.colors.primary }]}>
                     {formatDuration(item.totalTime)}
                   </Text>
-                  <Text variant="bodySmall" style={styles.percentageText}>
+                  <Text variant="bodySmall" style={[styles.percentageText, { color: theme.colors.text }]}>
                     {item.percentage.toFixed(1)}% of total • {item.exerciseCount.toLocaleString()} exercise{item.exerciseCount !== 1 ? 's' : ''}
                   </Text>
                 </View>
-                <IconButton icon="chevron-right" iconColor={Colors.primary} size={28} />
+                <IconButton icon="chevron-right" iconColor={theme.colors.primary} size={28} />
               </View>
               <ProgressBar
                 progress={item.percentage / 100}
-                color={Colors.primary}
-                style={styles.progressBar}
+                color={theme.colors.primary}
+                style={[styles.progressBar, { backgroundColor: theme.colors.border }]}
               />
             </Card.Content>
           </Card>
@@ -234,7 +236,7 @@ export default function TimeBreakdownModal({
     if (!selectedGroup || selectedGroup.exercises.length === 0) {
       return (
         <View style={styles.emptyContainer}>
-          <Text variant="bodyLarge" style={styles.emptyText}>
+          <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.text }]}>
             No exercises found for this muscle group
           </Text>
         </View>
@@ -243,24 +245,24 @@ export default function TimeBreakdownModal({
 
     return (
       <ScrollView 
-        style={styles.scrollContent}
+        style={[styles.scrollContent, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={{ paddingBottom: Spacing.xl }}
         showsVerticalScrollIndicator={true}
       >
-        <Card style={styles.headerCard} mode="elevated">
+        <Card style={[styles.headerCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.primary }]} mode="elevated">
           <Card.Content style={{ padding: Spacing.md }}>
             <View style={styles.exerciseHeader}>
               <IconButton
                 icon="arrow-left"
-                iconColor={Colors.primary}
+                iconColor={theme.colors.primary}
                 size={28}
                 onPress={handleBackToMuscleGroups}
               />
               <View style={{ flex: 1 }}>
-                <Text variant="titleLarge" style={styles.muscleGroupName}>
+                <Text variant="titleLarge" style={[styles.muscleGroupName, { color: theme.colors.text }]}>
                   {getMuscleGroupLabel(selectedMuscleGroup!)}
                 </Text>
-                <Text variant="bodyMedium" style={[styles.percentageText, { color: Colors.primary, fontWeight: '600' }]}>
+                <Text variant="bodyMedium" style={[styles.percentageText, { color: theme.colors.primary, fontWeight: '600' }]}>
                   {formatDuration(selectedGroup.totalTime)} total
                 </Text>
               </View>
@@ -269,25 +271,25 @@ export default function TimeBreakdownModal({
         </Card>
 
         {selectedGroup.exercises.map((exercise) => (
-          <Card key={exercise.exerciseId} style={styles.exerciseCard} mode="elevated">
+          <Card key={exercise.exerciseId} style={[styles.exerciseCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]} mode="elevated">
             <Card.Content style={{ padding: Spacing.md }}>
               <View style={styles.exerciseRow}>
                 <View style={{ flex: 1 }}>
-                  <Text variant="titleMedium" style={styles.exerciseName}>
+                  <Text variant="titleMedium" style={[styles.exerciseName, { color: theme.colors.text }]}>
                     {exercise.exerciseName}
                   </Text>
-                  <Text variant="headlineSmall" style={styles.timeText}>
+                  <Text variant="headlineSmall" style={[styles.timeText, { color: theme.colors.primary }]}>
                     {formatDuration(exercise.totalTime)}
                   </Text>
-                  <Text variant="bodySmall" style={styles.percentageText}>
+                  <Text variant="bodySmall" style={[styles.percentageText, { color: theme.colors.text }]}>
                     {exercise.percentage.toFixed(1)}% of group • {exercise.workoutCount.toLocaleString()} workout{exercise.workoutCount !== 1 ? 's' : ''}
                   </Text>
                 </View>
               </View>
               <ProgressBar
                 progress={exercise.percentage / 100}
-                color={Colors.primary}
-                style={styles.progressBar}
+                color={theme.colors.primary}
+                style={[styles.progressBar, { backgroundColor: theme.colors.border }]}
               />
             </Card.Content>
           </Card>
@@ -305,18 +307,18 @@ export default function TimeBreakdownModal({
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={styles.modalContainer}
+        contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         dismissable
         style={{ margin: 0 }}
       >
         <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text variant="headlineSmall" style={styles.title}>
+          <View style={[styles.header, { borderBottomColor: theme.colors.primary, backgroundColor: theme.colors.card }]}>
+            <Text variant="headlineSmall" style={[styles.title, { color: theme.colors.text }]}>
               {title}
             </Text>
             <IconButton
               icon="close"
-              iconColor={Colors.text}
+              iconColor={theme.colors.text}
               size={28}
               onPress={onDismiss}
               style={{ margin: 0 }}
@@ -332,7 +334,6 @@ export default function TimeBreakdownModal({
 
 const styles = StyleSheet.create({
   modalContainer: {
-    backgroundColor: '#1e1e1e', // Slightly lighter than card for better contrast
     margin: Spacing.md,
     borderRadius: 16,
     maxHeight: '90%',
@@ -344,7 +345,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
   },
   modalContent: {
     flex: 1,
@@ -356,26 +356,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.lg,
     borderBottomWidth: 2,
-    borderBottomColor: Colors.primary,
-    backgroundColor: '#252525', // Lighter than surface for header contrast
   },
   title: {
     fontWeight: 'bold',
-    color: Colors.text,
     flex: 1,
     fontSize: 20,
   },
   scrollContent: {
     flex: 1,
     padding: Spacing.md,
-    backgroundColor: '#1a1a1a', // Slightly lighter than pure black
   },
   muscleGroupCard: {
     marginBottom: Spacing.md,
-    backgroundColor: '#2a2a2a', // Lighter than surface for better contrast
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#404040', // Lighter border for visibility
     elevation: 3,
   },
   muscleGroupHeader: {
@@ -385,18 +379,15 @@ const styles = StyleSheet.create({
   },
   muscleGroupName: {
     fontWeight: 'bold',
-    color: Colors.text,
     marginBottom: Spacing.xs,
     fontSize: 18,
   },
   timeText: {
-    color: Colors.primary,
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
     fontSize: 24,
   },
   percentageText: {
-    color: Colors.text,
     fontSize: 13,
     opacity: 0.8,
   },
@@ -404,14 +395,11 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginTop: Spacing.sm,
-    backgroundColor: Colors.border,
   },
   exerciseCard: {
     marginBottom: Spacing.sm,
-    backgroundColor: '#2a2a2a', // Lighter than surface for better contrast
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#404040', // Lighter border for visibility
     elevation: 2,
   },
   exerciseRow: {
@@ -421,16 +409,13 @@ const styles = StyleSheet.create({
   },
   exerciseName: {
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: Spacing.xs,
     fontSize: 16,
   },
   headerCard: {
     marginBottom: Spacing.md,
-    backgroundColor: '#2a2a2a', // Lighter for contrast
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.primary, // Use primary color for header card border
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -443,21 +428,17 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
   emptyText: {
-    color: Colors.text,
     textAlign: 'center',
     fontSize: 16,
   },
   chartCard: {
     marginBottom: Spacing.md,
-    backgroundColor: '#2a2a2a', // Lighter for contrast
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#404040', // Lighter border
     elevation: 2,
   },
   chartTitle: {
     fontWeight: 'bold',
-    color: Colors.text,
     marginBottom: Spacing.md,
     textAlign: 'center',
     fontSize: 18,

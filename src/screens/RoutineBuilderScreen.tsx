@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Alert, ScrollView } from 'react-native';
 import { Text, TextInput, Button, Card, Chip, IconButton, Portal, Modal, Searchbar, Dialog } from 'react-native-paper';
-import { Colors, Spacing, MuscleGroups } from '../constants/theme';
+import { Spacing, MuscleGroups } from '../constants/theme';
 import { Routine, RoutineExercise, Exercise, MuscleGroup } from '../types';
 import WeightSlider from '../components/WeightSlider';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../context/ThemeProvider';
 
 type RoutineBuilderScreenRouteProp = RouteProp<RootStackParamList, 'RoutineBuilder'>;
 type RoutineBuilderScreenNavigationProp = StackNavigationProp<RootStackParamList, 'RoutineBuilder'>;
@@ -23,6 +24,7 @@ const EXERCISES_STORAGE_KEY = 'exercises';
 export default function RoutineBuilderScreen({ route, navigation }: Props) {
   const { routineId } = route.params;
   const isEditing = !!routineId;
+  const { theme } = useTheme();
 
   const [routineName, setRoutineName] = useState('');
   const [selectedExercises, setSelectedExercises] = useState<RoutineExercise[]>([]);
@@ -240,14 +242,14 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   };
 
   const renderSelectedExercise = ({ item, index }: { item: RoutineExercise; index: number }) => (
-    <Card style={styles.exerciseCard}>
+    <Card style={[styles.exerciseCard, { backgroundColor: theme.colors.card }]}>
       <Card.Content>
         <View style={styles.exerciseRow}>
           <View style={{ flex: 1 }}>
             <Text variant="bodyLarge">
               {index + 1}. {item.exerciseName}
             </Text>
-            <Text variant="bodySmall" style={styles.muscleGroup}>
+            <Text variant="bodySmall" style={[styles.muscleGroup, { color: theme.colors.textSecondary }]}>
               {item.muscleGroup}
               {item.currentWeight && ` • ${item.currentWeight} lbs`}
             </Text>
@@ -272,7 +274,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
             />
             <IconButton
               icon="delete"
-              iconColor={Colors.error}
+              iconColor={theme.colors.error}
               size={20}
               onPress={() => handleRemoveExercise(item.id)}
             />
@@ -286,15 +288,15 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
     const stats = getExerciseStats(item.id);
 
     return (
-      <Card style={styles.exerciseCard} onPress={() => handleSelectExercise(item)}>
+      <Card style={[styles.exerciseCard, { backgroundColor: theme.colors.card }]} onPress={() => handleSelectExercise(item)}>
         <Card.Content>
           <Text variant="bodyLarge">{item.name}</Text>
           {stats.pr !== null && stats.avg !== null ? (
-            <Text variant="bodySmall" style={styles.statsText}>
+            <Text variant="bodySmall" style={[styles.statsText, { color: theme.colors.textSecondary }]}>
               PR: {stats.pr} lbs  •  Avg: {stats.avg} lbs
             </Text>
           ) : (
-            <Text variant="bodySmall" style={styles.statsText}>
+            <Text variant="bodySmall" style={[styles.statsText, { color: theme.colors.textSecondary }]}>
               No History Yet
             </Text>
           )}
@@ -304,8 +306,8 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.formSection}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.formSection, { borderBottomColor: theme.colors.border }]}>
         <TextInput
           label="Routine Name *"
           value={routineName}
@@ -326,13 +328,13 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
       </View>
 
       <View style={styles.exercisesSection}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>
+        <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>
           Exercises ({selectedExercises.length})
         </Text>
 
         {selectedExercises.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text variant="bodyLarge" style={styles.emptyText}>
+            <Text variant="bodyLarge" style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
               No exercises added yet
             </Text>
           </View>
@@ -345,7 +347,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
         )}
       </View>
 
-      <View style={styles.bottomButtons}>
+      <View style={[styles.bottomButtons, { borderTopColor: theme.colors.border }]}>
         <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.button}>
           Cancel
         </Button>
@@ -359,7 +361,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
         <Modal
           visible={showExercisePicker}
           onDismiss={() => setShowExercisePicker(false)}
-          contentContainerStyle={styles.modalContainer}
+          contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.card }]}
         >
           <Text variant="headlineSmall" style={styles.modalTitle}>
             Select Exercise
@@ -420,7 +422,7 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
         <Dialog visible={showWeightDialog} onDismiss={() => setShowWeightDialog(false)}>
           <Dialog.Title>Set Starting Weight</Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium" style={styles.dialogSubtitle}>
+            <Text variant="bodyMedium" style={[styles.dialogSubtitle, { color: theme.colors.textSecondary }]}>
               {selectedExerciseToAdd?.name}
             </Text>
             <WeightSlider
@@ -438,10 +440,10 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
 
       {/* Edit Weight Dialog */}
       <Portal>
-        <Dialog visible={showEditDialog} onDismiss={() => setShowEditDialog(false)}>
+          <Dialog visible={showEditDialog} onDismiss={() => setShowEditDialog(false)}>
           <Dialog.Title>Edit Exercise</Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium" style={styles.dialogSubtitle}>
+            <Text variant="bodyMedium" style={[styles.dialogSubtitle, { color: theme.colors.textSecondary }]}>
               {selectedExerciseToEdit?.exerciseName}
             </Text>
             <WeightSlider
@@ -463,12 +465,10 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   formSection: {
     padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   input: {
     marginBottom: Spacing.md,
@@ -483,11 +483,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: Spacing.md,
     fontWeight: 'bold',
-    color: Colors.text,
   },
   exerciseCard: {
     marginBottom: Spacing.sm,
-    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   exerciseRow: {
@@ -498,11 +496,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   muscleGroup: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   statsText: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   chipContainer: {
@@ -517,21 +513,18 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   emptyText: {
-    color: Colors.textSecondary,
   },
   bottomButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
   },
   button: {
     flex: 1,
     marginHorizontal: Spacing.xs,
   },
   modalContainer: {
-    backgroundColor: Colors.card,
     margin: Spacing.lg,
     padding: Spacing.lg,
     borderRadius: 12,
@@ -554,7 +547,6 @@ const styles = StyleSheet.create({
   },
   dialogSubtitle: {
     marginBottom: Spacing.md,
-    color: Colors.textSecondary,
   },
   weightInput: {
     marginTop: Spacing.sm,

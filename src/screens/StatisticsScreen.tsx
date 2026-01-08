@@ -1,38 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { Text, Card, SegmentedButtons } from 'react-native-paper';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { formatDuration } from '../utils/timeFormat';
 import TimeBreakdownModal from '../components/TimeBreakdownModal';
+import { useTheme } from '../context/ThemeProvider';
 
 const screenWidth = Dimensions.get('window').width;
-
-const chartConfig = {
-  backgroundColor: Colors.card,
-  backgroundGradientFrom: Colors.card,
-  backgroundGradientTo: Colors.card,
-  decimalPlaces: 0,
-  color: (opacity = 1) => Colors.primary,
-  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-  strokeWidth: 2,
-  style: {
-    borderRadius: 16,
-  },
-  propsForDots: {
-    r: '6',
-    strokeWidth: '2',
-    stroke: Colors.primary,
-    fill: Colors.primary,
-  },
-  propsForBackgroundLines: {
-    strokeDasharray: '',
-    stroke: Colors.border,
-    strokeWidth: 1,
-  },
-};
 
 interface WorkoutLog {
   id: string;
@@ -85,6 +62,7 @@ interface PersonalRecord {
 }
 
 export default function StatisticsScreen() {
+  const { theme } = useTheme();
   const [selectedTab, setSelectedTab] = useState('overview');
   const [stats, setStats] = useState<Stats>({
     totalWorkouts: 0,
@@ -125,6 +103,30 @@ export default function StatisticsScreen() {
   const [breakdownModalVisible, setBreakdownModalVisible] = useState(false);
   const [breakdownFilterType, setBreakdownFilterType] = useState<'total' | 'week' | 'month'>('total');
   const [breakdownTitle, setBreakdownTitle] = useState('Time Breakdown');
+
+  const chartConfig = useMemo(() => ({
+    backgroundColor: theme.colors.card,
+    backgroundGradientFrom: theme.colors.card,
+    backgroundGradientTo: theme.colors.card,
+    decimalPlaces: 0,
+    color: (opacity = 1) => theme.colors.primary,
+    labelColor: (opacity = 1) => theme.colors.textSecondary,
+    strokeWidth: 2,
+    style: {
+      borderRadius: 16,
+    },
+    propsForDots: {
+      r: '6',
+      strokeWidth: '2',
+      stroke: theme.colors.primary,
+      fill: theme.colors.primary,
+    },
+    propsForBackgroundLines: {
+      strokeDasharray: '',
+      stroke: theme.colors.border,
+      strokeWidth: 1,
+    },
+  }), [theme]);
 
   const calculateStats = useCallback(async () => {
     try {
@@ -383,18 +385,18 @@ export default function StatisticsScreen() {
     if (delta.value === 0) return null;
     const arrow = delta.isPositive ? '↑' : '↓';
     return (
-      <Text variant="bodySmall" style={{ color: delta.isPositive ? Colors.primary : Colors.textSecondary, marginTop: 2 }}>
+      <Text variant="bodySmall" style={{ color: delta.isPositive ? theme.colors.primary : theme.colors.textSecondary, marginTop: 2 }}>
         {arrow} {formatValue(Math.abs(delta.value))} ({Math.abs(delta.percentage)}%)
       </Text>
     );
   };
 
   const renderKPICard = (title: string, value: string, delta?: { value: number; percentage: number; isPositive: boolean }, subtitle?: string, formatValue?: (val: number) => string) => (
-    <Card style={styles.kpiCard}>
+    <Card style={[styles.kpiCard, { backgroundColor: theme.colors.card }]}>
       <Card.Content>
-        <Text variant="labelMedium" style={styles.kpiLabel}>{title}</Text>
-        <Text variant="displaySmall" style={styles.kpiValue}>{value}</Text>
-        {subtitle && <Text variant="bodySmall" style={styles.kpiSubtitle}>{subtitle}</Text>}
+        <Text variant="labelMedium" style={[styles.kpiLabel, { color: theme.colors.textSecondary }]}>{title}</Text>
+        <Text variant="displaySmall" style={[styles.kpiValue, { color: theme.colors.primary }]}>{value}</Text>
+        {subtitle && <Text variant="bodySmall" style={[styles.kpiSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
         {delta && renderDelta(delta, formatValue)}
       </Card.Content>
     </Card>
@@ -403,7 +405,7 @@ export default function StatisticsScreen() {
   // Tab content renderers
   const renderOverviewTab = () => (
     <ScrollView style={styles.tabContent}>
-      <Text variant="titleSmall" style={styles.sectionLabel}>KEY PERFORMANCE INDICATORS</Text>
+      <Text variant="titleSmall" style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>KEY PERFORMANCE INDICATORS</Text>
 
       {/* Hero KPIs */}
       <View style={styles.heroRow}>
@@ -438,46 +440,46 @@ export default function StatisticsScreen() {
         )}
       </View>
 
-      <Text variant="titleSmall" style={[styles.sectionLabel, { marginTop: Spacing.lg }]}>MONTHLY PERFORMANCE</Text>
+      <Text variant="titleSmall" style={[styles.sectionLabel, { marginTop: Spacing.lg, color: theme.colors.textSecondary }]}>MONTHLY PERFORMANCE</Text>
 
       <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text variant="labelSmall" style={styles.statLabel}>Workouts This Month</Text>
-          <Text variant="headlineMedium" style={styles.statValue}>{stats.workoutsThisMonth}</Text>
+        <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+          <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Workouts This Month</Text>
+          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{stats.workoutsThisMonth}</Text>
           {renderDelta(calculateDelta(stats.workoutsThisMonth, stats.workoutsLastMonth))}
-          <Text variant="bodySmall" style={styles.statSubtext}>{stats.workoutsLastMonth} last month</Text>
+          <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>{stats.workoutsLastMonth} last month</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text variant="labelSmall" style={styles.statLabel}>Volume This Month</Text>
-          <Text variant="headlineMedium" style={styles.statValue}>{formatNumber(stats.volumeThisMonth)}</Text>
+        <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+          <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Volume This Month</Text>
+          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.volumeThisMonth)}</Text>
           {renderDelta(calculateDelta(stats.volumeThisMonth, stats.volumeLastMonth), formatNumber)}
-          <Text variant="bodySmall" style={styles.statSubtext}>{formatNumber(stats.volumeLastMonth)} lbs last month</Text>
+          <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>{formatNumber(stats.volumeLastMonth)} lbs last month</Text>
         </View>
       </View>
 
-      <Text variant="titleSmall" style={[styles.sectionLabel, { marginTop: Spacing.lg }]}>ALL-TIME TOTALS</Text>
+      <Text variant="titleSmall" style={[styles.sectionLabel, { marginTop: Spacing.lg, color: theme.colors.textSecondary }]}>ALL-TIME TOTALS</Text>
 
       <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text variant="labelSmall" style={styles.statLabel}>Total Workouts</Text>
-          <Text variant="headlineLarge" style={styles.statValue}>{formatNumber(stats.totalWorkouts)}</Text>
+        <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+          <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Workouts</Text>
+          <Text variant="headlineLarge" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.totalWorkouts)}</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text variant="labelSmall" style={styles.statLabel}>Total Volume</Text>
-          <Text variant="headlineLarge" style={styles.statValue}>{formatNumber(stats.totalVolume)}</Text>
-          <Text variant="bodySmall" style={styles.statSubtext}>lbs lifted</Text>
+        <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+          <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Volume</Text>
+          <Text variant="headlineLarge" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.totalVolume)}</Text>
+          <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>lbs lifted</Text>
         </View>
       </View>
 
       <View style={styles.statsRow}>
-        <View style={styles.statBox}>
-          <Text variant="labelSmall" style={styles.statLabel}>Avg Weight (All Time)</Text>
-          <Text variant="headlineMedium" style={styles.statValue}>{formatNumber(stats.averageWeightAllTime)}</Text>
-          <Text variant="bodySmall" style={styles.statSubtext}>lbs per set</Text>
+        <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+          <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Avg Weight (All Time)</Text>
+          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.averageWeightAllTime)}</Text>
+          <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>lbs per set</Text>
         </View>
-        <View style={styles.statBox}>
-          <Text variant="labelSmall" style={styles.statLabel}>Avg Workout Time</Text>
-          <Text variant="headlineMedium" style={styles.statValue}>{formatDuration(stats.averageWorkoutTime)}</Text>
+        <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+          <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Avg Workout Time</Text>
+          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.averageWorkoutTime)}</Text>
         </View>
       </View>
     </ScrollView>
@@ -485,9 +487,9 @@ export default function StatisticsScreen() {
 
   const renderPerformanceTab = () => (
     <ScrollView style={styles.tabContent}>
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
         <Card.Content>
-          <Text variant="titleLarge" style={styles.cardTitle}>
+          <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
             Workouts This Week
           </Text>
           <LineChart
@@ -501,9 +503,9 @@ export default function StatisticsScreen() {
         </Card.Content>
       </Card>
 
-      <Card style={styles.card}>
+      <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
         <Card.Content>
-          <Text variant="titleLarge" style={styles.cardTitle}>
+          <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
             Monthly Volume by Week
           </Text>
           <BarChart
@@ -520,18 +522,18 @@ export default function StatisticsScreen() {
       </Card>
 
       {personalRecords.length > 0 && (
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.cardTitle}>
+            <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
               Top 5 Personal Records
             </Text>
             <View style={styles.prContainer}>
               {personalRecords.map((pr, index) => (
-                <View key={index} style={styles.prItem}>
+                <View key={index} style={[styles.prItem, { backgroundColor: theme.colors.surface }]}>
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyLarge">{pr.exerciseName}</Text>
                   </View>
-                  <Text variant="titleMedium" style={{ color: Colors.primary, fontWeight: 'bold' }}>
+                  <Text variant="titleMedium" style={{ color: theme.colors.primary, fontWeight: 'bold' }}>
                     {formatNumber(pr.maxWeight)} lbs
                   </Text>
                 </View>
@@ -547,7 +549,7 @@ export default function StatisticsScreen() {
     <ScrollView style={styles.tabContent}>
       {stats.totalWorkoutTime > 0 ? (
         <>
-          <Text variant="titleSmall" style={styles.sectionLabel}>TIME ANALYTICS</Text>
+          <Text variant="titleSmall" style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>TIME ANALYTICS</Text>
 
           <View style={styles.heroRow}>
             <TouchableOpacity
@@ -607,26 +609,26 @@ export default function StatisticsScreen() {
           </View>
 
           <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text variant="labelSmall" style={styles.statLabel}>Longest Workout</Text>
-              <Text variant="headlineMedium" style={styles.statValue}>{formatDuration(stats.longestWorkout)}</Text>
+            <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+              <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Longest Workout</Text>
+              <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.longestWorkout)}</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text variant="labelSmall" style={styles.statLabel}>Shortest Workout</Text>
-              <Text variant="headlineMedium" style={styles.statValue}>{formatDuration(stats.shortestWorkout)}</Text>
+            <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
+              <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Shortest Workout</Text>
+              <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.shortestWorkout)}</Text>
             </View>
           </View>
 
-          <Text variant="bodySmall" style={[styles.statSubtext, { textAlign: 'center', marginTop: Spacing.md }]}>
+          <Text variant="bodySmall" style={[styles.statSubtext, { textAlign: 'center', marginTop: Spacing.md, color: theme.colors.textSecondary }]}>
             Tap time cards to view detailed breakdown by exercise
           </Text>
         </>
       ) : (
-        <Card style={styles.card}>
+        <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
           <Card.Content>
             <View style={styles.emptyContainer}>
               <Text variant="bodyLarge">No time data available</Text>
-              <Text variant="bodyMedium" style={styles.emptySubtext}>
+              <Text variant="bodyMedium" style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
                 Time tracking will appear here after completing workouts
               </Text>
             </View>
@@ -637,7 +639,7 @@ export default function StatisticsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SegmentedButtons
         value={selectedTab}
         onValueChange={setSelectedTab}
@@ -651,11 +653,11 @@ export default function StatisticsScreen() {
 
       {stats.totalWorkouts === 0 ? (
         <View style={styles.emptyStateContainer}>
-          <Card style={styles.card}>
+          <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
             <Card.Content>
               <View style={styles.emptyContainer}>
                 <Text variant="headlineSmall" style={{ marginBottom: Spacing.md }}>No workout data yet</Text>
-                <Text variant="bodyLarge" style={styles.emptySubtext}>
+                <Text variant="bodyLarge" style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
                   Complete your first workout to see statistics and charts
                 </Text>
               </View>
@@ -684,7 +686,6 @@ export default function StatisticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   tabBar: {
     margin: Spacing.md,
@@ -696,7 +697,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
   sectionLabel: {
-    color: Colors.textSecondary,
     fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: Spacing.md,
@@ -709,25 +709,21 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: Colors.card,
     borderRadius: 12,
     elevation: 2,
   },
   kpiLabel: {
-    color: Colors.textSecondary,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.xs,
   },
   kpiValue: {
-    color: Colors.primary,
     fontWeight: 'bold',
     fontSize: 32,
     lineHeight: 38,
   },
   kpiSubtitle: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   statsRow: {
@@ -737,37 +733,31 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: Spacing.md,
     elevation: 1,
   },
   statLabel: {
-    color: Colors.textSecondary,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.xs,
   },
   statValue: {
-    color: Colors.text,
     fontWeight: 'bold',
     marginTop: Spacing.xs,
   },
   statSubtext: {
-    color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
   card: {
     marginBottom: Spacing.md,
-    backgroundColor: Colors.card,
     borderRadius: 12,
     elevation: 2,
   },
   cardTitle: {
     marginBottom: Spacing.md,
     fontWeight: 'bold',
-    color: Colors.text,
   },
   chart: {
     marginVertical: Spacing.sm,
@@ -782,7 +772,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderRadius: 8,
     marginBottom: Spacing.xs,
   },
@@ -798,7 +787,6 @@ const styles = StyleSheet.create({
   },
   emptySubtext: {
     marginTop: Spacing.sm,
-    color: Colors.textSecondary,
     textAlign: 'center',
   },
 });

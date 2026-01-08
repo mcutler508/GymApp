@@ -1,10 +1,10 @@
 // Theme tokens for light and dark modes
 export const LightTheme = {
   colors: {
-    primary: '#00E5FF', // Cyan accent
-    primaryDark: '#00B8D4',
-    primaryLight: '#80EDFF',
-    secondary: '#00E5FF',
+    primary: '#0891B2', // Cyan 600 - Better contrast for light mode
+    primaryDark: '#0E7490',
+    primaryLight: '#06B6D4',
+    secondary: '#0891B2',
     background: '#FFFFFF',
     surface: '#F6F8FA',
     card: '#FFFFFF',
@@ -12,11 +12,11 @@ export const LightTheme = {
     success: '#22C55E',
     warning: '#F59E0B',
     text: '#0B1217',
-    textSecondary: '#5B6B79',
+    textSecondary: '#64748B', // Darker gray for better readability
     border: '#E2E8F0',
     divider: '#E2E8F0',
-    onPrimary: '#000000',
-    onSecondary: '#000000',
+    onPrimary: '#FFFFFF', // White text on primary button
+    onSecondary: '#FFFFFF',
     onBackground: '#0B1217',
     onSurface: '#0B1217',
     onError: '#FFFFFF',
@@ -92,10 +92,10 @@ export const LightTheme = {
 
 export const DarkTheme = {
   colors: {
-    primary: '#00E5FF', // Cyan accent
-    primaryDark: '#00B8D4',
-    primaryLight: '#80EDFF',
-    secondary: '#00E5FF',
+    primary: '#22D3EE', // Cyan 400 - Vibrant but not overwhelming for dark mode
+    primaryDark: '#06B6D4',
+    primaryLight: '#67E8F9',
+    secondary: '#22D3EE',
     background: '#0B1217',
     surface: '#111A22',
     card: '#1A2332',
@@ -103,11 +103,11 @@ export const DarkTheme = {
     success: '#22C55E',
     warning: '#F59E0B',
     text: '#E6EDF3',
-    textSecondary: '#8B95A6',
+    textSecondary: '#94A3B8', // Lighter gray for better readability
     border: '#1F2937',
     divider: '#1F2937',
-    onPrimary: '#000000',
-    onSecondary: '#000000',
+    onPrimary: '#0B1217', // Dark text on bright primary
+    onSecondary: '#0B1217',
     onBackground: '#E6EDF3',
     onSurface: '#E6EDF3',
     onError: '#FFFFFF',

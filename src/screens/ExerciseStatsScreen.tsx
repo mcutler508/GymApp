@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, Card, Divider } from 'react-native-paper';
-import { Colors, Spacing } from '../constants/theme';
+import { Spacing } from '../constants/theme';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../context/ThemeProvider';
 
 type ExerciseStatsScreenRouteProp = RouteProp<RootStackParamList, 'ExerciseStats'>;
 type ExerciseStatsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ExerciseStats'>;
@@ -25,6 +26,7 @@ interface WorkoutLog {
 
 export default function ExerciseStatsScreen({ route, navigation }: Props) {
   const { exerciseId, exerciseName } = route.params;
+  const { theme } = useTheme();
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -97,52 +99,52 @@ export default function ExerciseStatsScreen({ route, navigation }: Props) {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Text>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant="headlineMedium" style={[styles.title, { color: theme.colors.text }]}>
           {exerciseName}
         </Text>
 
         {/* Overview Section */}
-        <Card style={styles.overviewCard}>
+        <Card style={[styles.overviewCard, { backgroundColor: theme.colors.card }]}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.sectionTitle}>
+            <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
               OVERVIEW
             </Text>
 
             {stats.pr !== null ? (
               <>
                 <View style={styles.statRow}>
-                  <Text variant="bodyLarge" style={styles.statLabel}>PR:</Text>
-                  <Text variant="titleLarge" style={styles.statValue}>{stats.pr} lbs</Text>
+                  <Text variant="bodyLarge" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>PR:</Text>
+                  <Text variant="titleLarge" style={[styles.statValue, { color: theme.colors.primary }]}>{stats.pr} lbs</Text>
                 </View>
 
                 <View style={styles.statRow}>
-                  <Text variant="bodyLarge" style={styles.statLabel}>Average:</Text>
-                  <Text variant="titleLarge" style={styles.statValue}>{stats.avg} lbs</Text>
+                  <Text variant="bodyLarge" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Average:</Text>
+                  <Text variant="titleLarge" style={[styles.statValue, { color: theme.colors.primary }]}>{stats.avg} lbs</Text>
                 </View>
 
                 <View style={styles.statRow}>
-                  <Text variant="bodyLarge" style={styles.statLabel}>Total Sets:</Text>
-                  <Text variant="titleLarge" style={styles.statValue}>{stats.totalSets}</Text>
+                  <Text variant="bodyLarge" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Sets:</Text>
+                  <Text variant="titleLarge" style={[styles.statValue, { color: theme.colors.primary }]}>{stats.totalSets}</Text>
                 </View>
 
                 <View style={styles.statRow}>
-                  <Text variant="bodyLarge" style={styles.statLabel}>Last Performed:</Text>
-                  <Text variant="titleMedium" style={styles.statValue}>
+                  <Text variant="bodyLarge" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Last Performed:</Text>
+                  <Text variant="titleMedium" style={[styles.statValue, { color: theme.colors.primary }]}>
                     {formatDate(stats.lastPerformed!)}
                   </Text>
                 </View>
               </>
             ) : (
-              <Text variant="bodyLarge" style={styles.noDataText}>
+              <Text variant="bodyLarge" style={[styles.noDataText, { color: theme.colors.textSecondary }]}>
                 No workout history yet
               </Text>
             )}
@@ -151,27 +153,27 @@ export default function ExerciseStatsScreen({ route, navigation }: Props) {
 
         {/* Recent History Section */}
         {recentWorkouts.length > 0 && (
-          <Card style={styles.historyCard}>
+          <Card style={[styles.historyCard, { backgroundColor: theme.colors.card }]}>
             <Card.Content>
-              <Text variant="titleLarge" style={styles.sectionTitle}>
+              <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.primary }]}>
                 RECENT HISTORY
               </Text>
 
               {recentWorkouts.map((workout, index) => (
                 <View key={workout.id}>
                   <View style={styles.workoutEntry}>
-                    <Text variant="titleMedium" style={styles.workoutDate}>
+                    <Text variant="titleMedium" style={[styles.workoutDate, { color: theme.colors.text }]}>
                       {formatDate(workout.date)}
                     </Text>
                     <View style={styles.setsContainer}>
                       {workout.sets.map((set, setIndex) => (
-                        <Text key={setIndex} variant="bodyMedium" style={styles.setText}>
+                        <Text key={setIndex} variant="bodyMedium" style={[styles.setText, { color: theme.colors.textSecondary }]}>
                           {set.weight} lbs × {set.reps} reps
                         </Text>
                       ))}
                     </View>
                   </View>
-                  {index < recentWorkouts.length - 1 && <Divider style={styles.divider} />}
+                  {index < recentWorkouts.length - 1 && <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />}
                 </View>
               ))}
             </Card.Content>
@@ -185,7 +187,6 @@ export default function ExerciseStatsScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     padding: Spacing.md,
@@ -193,24 +194,20 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: Spacing.lg,
     textAlign: 'center',
-    color: Colors.text,
     fontWeight: 'bold',
   },
   overviewCard: {
     marginBottom: Spacing.lg,
-    backgroundColor: Colors.card,
     borderRadius: 12,
     elevation: 2,
   },
   historyCard: {
     marginBottom: Spacing.lg,
-    backgroundColor: Colors.card,
     borderRadius: 12,
     elevation: 2,
   },
   sectionTitle: {
     marginBottom: Spacing.md,
-    color: Colors.primary,
     fontWeight: 'bold',
   },
   statRow: {
@@ -220,14 +217,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   statLabel: {
-    color: Colors.textSecondary,
   },
   statValue: {
-    color: Colors.primary,
     fontWeight: 'bold',
   },
   noDataText: {
-    color: Colors.textSecondary,
     textAlign: 'center',
     marginTop: Spacing.md,
   },
@@ -235,7 +229,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   workoutDate: {
-    color: Colors.text,
     marginBottom: Spacing.xs,
     fontWeight: '600',
   },
@@ -243,11 +236,9 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   setText: {
-    color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
   divider: {
     marginVertical: Spacing.md,
-    backgroundColor: Colors.border,
   },
 });
