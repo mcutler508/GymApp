@@ -101,6 +101,7 @@ export type RootStackParamList = {
   WorkoutLog: undefined;
   Statistics: undefined;
   Routines: undefined;
+  Settings: undefined;
   RoutineBuilder: { routineId?: string };
   ExerciseDetail: { exerciseId: string };
   ExerciseStats: { exerciseId: string; exerciseName: string };

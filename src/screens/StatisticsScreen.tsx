@@ -395,7 +395,7 @@ export default function StatisticsScreen() {
     <Card style={[styles.kpiCard, { backgroundColor: theme.colors.card }]}>
       <Card.Content>
         <Text variant="labelMedium" style={[styles.kpiLabel, { color: theme.colors.textSecondary }]}>{title}</Text>
-        <Text variant="displaySmall" style={[styles.kpiValue, { color: theme.colors.primary }]}>{value}</Text>
+        <Text variant="headlineMedium" style={[styles.kpiValue, { color: theme.colors.primary }]}>{value}</Text>
         {subtitle && <Text variant="bodySmall" style={[styles.kpiSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>}
         {delta && renderDelta(delta, formatValue)}
       </Card.Content>
@@ -445,13 +445,13 @@ export default function StatisticsScreen() {
       <View style={styles.statsRow}>
         <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
           <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Workouts This Month</Text>
-          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{stats.workoutsThisMonth}</Text>
+          <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text }]}>{stats.workoutsThisMonth}</Text>
           {renderDelta(calculateDelta(stats.workoutsThisMonth, stats.workoutsLastMonth))}
           <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>{stats.workoutsLastMonth} last month</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
           <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Volume This Month</Text>
-          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.volumeThisMonth)}</Text>
+          <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.volumeThisMonth)}</Text>
           {renderDelta(calculateDelta(stats.volumeThisMonth, stats.volumeLastMonth), formatNumber)}
           <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>{formatNumber(stats.volumeLastMonth)} lbs last month</Text>
         </View>
@@ -462,11 +462,11 @@ export default function StatisticsScreen() {
       <View style={styles.statsRow}>
         <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
           <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Workouts</Text>
-          <Text variant="headlineLarge" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.totalWorkouts)}</Text>
+          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.totalWorkouts)}</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
           <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Volume</Text>
-          <Text variant="headlineLarge" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.totalVolume)}</Text>
+          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.totalVolume)}</Text>
           <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>lbs lifted</Text>
         </View>
       </View>
@@ -474,12 +474,12 @@ export default function StatisticsScreen() {
       <View style={styles.statsRow}>
         <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
           <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Avg Weight (All Time)</Text>
-          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.averageWeightAllTime)}</Text>
+          <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text }]}>{formatNumber(stats.averageWeightAllTime)}</Text>
           <Text variant="bodySmall" style={[styles.statSubtext, { color: theme.colors.textSecondary }]}>lbs per set</Text>
         </View>
         <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
           <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Avg Workout Time</Text>
-          <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.averageWorkoutTime)}</Text>
+          <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.averageWorkoutTime)}</Text>
         </View>
       </View>
     </ScrollView>
@@ -611,11 +611,11 @@ export default function StatisticsScreen() {
           <View style={styles.statsRow}>
             <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
               <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Longest Workout</Text>
-              <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.longestWorkout)}</Text>
+              <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.longestWorkout)}</Text>
             </View>
             <View style={[styles.statBox, { backgroundColor: theme.colors.card }]}>
               <Text variant="labelSmall" style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Shortest Workout</Text>
-              <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.shortestWorkout)}</Text>
+              <Text variant="headlineSmall" style={[styles.statValue, { color: theme.colors.text }]}>{formatDuration(stats.shortestWorkout)}</Text>
             </View>
           </View>
 
@@ -720,8 +720,8 @@ const styles = StyleSheet.create({
   },
   kpiValue: {
     fontWeight: 'bold',
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 24,
+    lineHeight: 30,
   },
   kpiSubtitle: {
     marginTop: Spacing.xs,

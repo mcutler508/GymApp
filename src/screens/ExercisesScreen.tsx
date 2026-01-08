@@ -141,8 +141,6 @@ export default function ExercisesScreen() {
   // Form state
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newExerciseMuscleGroup, setNewExerciseMuscleGroup] = useState<MuscleGroup>('chest');
-  const [newExerciseEquipment, setNewExerciseEquipment] = useState('');
-  const [newExerciseDescription, setNewExerciseDescription] = useState('');
 
   const loadExercises = useCallback(async () => {
     try {
@@ -241,8 +239,6 @@ export default function ExercisesScreen() {
       id: Date.now().toString(),
       name: newExerciseName.trim(),
       muscle_group: newExerciseMuscleGroup,
-      equipment: newExerciseEquipment.trim() || undefined,
-      description: newExerciseDescription.trim() || undefined,
       created_at: new Date().toISOString(),
     };
 
@@ -252,8 +248,6 @@ export default function ExercisesScreen() {
     // Reset form
     setNewExerciseName('');
     setNewExerciseMuscleGroup('chest');
-    setNewExerciseEquipment('');
-    setNewExerciseDescription('');
     setModalVisible(false);
   };
 
@@ -386,6 +380,7 @@ export default function ExercisesScreen() {
             onChangeText={setNewExerciseName}
             style={styles.input}
             mode="outlined"
+            placeholder="e.g., Overhead Cable Row"
           />
 
           <Menu
@@ -398,7 +393,7 @@ export default function ExercisesScreen() {
                 style={styles.input}
                 contentStyle={styles.menuButton}
               >
-                Muscle Group: {newExerciseMuscleGroup}
+                Muscle Group: {MuscleGroups.find(g => g.value === newExerciseMuscleGroup)?.label || newExerciseMuscleGroup}
               </Button>
             }
           >
@@ -413,25 +408,6 @@ export default function ExercisesScreen() {
               />
             ))}
           </Menu>
-
-          <TextInput
-            label="Equipment"
-            value={newExerciseEquipment}
-            onChangeText={setNewExerciseEquipment}
-            style={styles.input}
-            mode="outlined"
-            placeholder="e.g., Barbell, Dumbbells, Machine"
-          />
-
-          <TextInput
-            label="Description"
-            value={newExerciseDescription}
-            onChangeText={setNewExerciseDescription}
-            style={styles.input}
-            mode="outlined"
-            multiline
-            numberOfLines={3}
-          />
 
           <View style={styles.modalButtons}>
             <Button

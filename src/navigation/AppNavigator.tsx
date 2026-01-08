@@ -16,6 +16,7 @@ import ActiveWorkoutScreen from '../screens/ActiveWorkoutScreen';
 import RoutinesScreen from '../screens/RoutinesScreen';
 import RoutineBuilderScreen from '../screens/RoutineBuilderScreen';
 import ActiveRoutineWorkoutScreen from '../screens/ActiveRoutineWorkoutScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -195,6 +196,25 @@ export default function AppNavigator() {
             tabBarLabel: 'Stats',
             tabBarIcon: ({ color, size }) => (
               <MaterialCommunityIcons name="chart-line" color={color} size={size} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: theme.colors.surface,
+            },
+            headerTintColor: theme.colors.text,
+            headerTitleStyle: {
+              fontWeight: 'bold',
+              color: theme.colors.text,
+            },
+            tabBarLabel: 'Settings',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="cog" color={color} size={size} />
             ),
           }}
         />
