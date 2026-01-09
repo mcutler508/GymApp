@@ -7,7 +7,6 @@ import { Routine } from '../types';
 import { Colors, Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDuration } from '../utils/timeFormat';
-import ThemeToggle from '../components/ThemeToggle';
 import { useTheme } from '../context/ThemeProvider';
 
 type NavigationProp = StackNavigationProp<any>;
@@ -374,16 +373,6 @@ export default function HomeScreen() {
             </Card.Content>
           </Card>
         )}
-
-        {/* Settings */}
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="titleLarge" style={[styles.cardTitle, { color: theme.colors.text }]}>
-              Settings
-            </Text>
-            <ThemeToggle />
-          </Card.Content>
-        </Card>
       </View>
     </ScrollView>
   );

@@ -4,13 +4,16 @@ import { Text, Card, Button } from 'react-native-paper';
 import { Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeProvider';
+import { getRetroCardStyle, getRetroButtonStyle, getRetroTextStyle } from '../utils/retroStyles';
+import ThemeToggle from '../components/ThemeToggle';
 
 const ROUTINES_STORAGE_KEY = 'routines';
 const WORKOUT_LOGS_KEY = 'workoutLogs';
 const WORKOUT_HISTORY_KEY = 'workoutHistory';
 
 export default function SettingsScreen() {
-  const { theme } = useTheme();
+  const { theme, mode } = useTheme();
+  const isRetro = mode === 'retro';
 
   const handleRestoreToDefault = () => {
     Alert.alert(
@@ -50,27 +53,84 @@ export default function SettingsScreen() {
     );
   };
 
+  // Retro-specific styles using utility functions
+  const retroCardStyle = getRetroCardStyle({ theme, isRetro });
+  const retroTitleStyle = getRetroTextStyle({ isRetro, variant: 'heading' });
+  const retroButtonStyle = getRetroButtonStyle({ theme, isRetro, variant: 'danger' });
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-        <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.text }]}>
+        <Text
+          variant="titleLarge"
+          style={[
+            styles.sectionTitle,
+            { color: theme.colors.text },
+            retroTitleStyle
+          ]}
+        >
           Settings
         </Text>
 
-        <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
+        {/* Theme Card */}
+        <Card
+          style={[
+            styles.card,
+            { backgroundColor: theme.colors.card },
+            retroCardStyle
+          ]}
+        >
           <Card.Content>
-            <Text variant="titleMedium" style={[styles.cardTitle, { color: theme.colors.text }]}>
+            <Text
+              variant="titleMedium"
+              style={[
+                styles.cardTitle,
+                { color: theme.colors.text },
+                getRetroTextStyle({ isRetro, variant: 'title' })
+              ]}
+            >
+              Theme
+            </Text>
+            <ThemeToggle />
+          </Card.Content>
+        </Card>
+
+        {/* Data Management Card */}
+        <Card
+          style={[
+            styles.card,
+            { backgroundColor: theme.colors.card },
+            retroCardStyle
+          ]}
+        >
+          <Card.Content>
+            <Text
+              variant="titleMedium"
+              style={[
+                styles.cardTitle,
+                { color: theme.colors.text },
+                getRetroTextStyle({ isRetro, variant: 'title' })
+              ]}
+            >
               Data Management
             </Text>
-            <Text variant="bodyMedium" style={[styles.cardDescription, { color: theme.colors.textSecondary }]}>
+            <Text
+              variant="bodyMedium"
+              style={[
+                styles.cardDescription,
+                { color: theme.colors.textSecondary },
+                getRetroTextStyle({ isRetro, variant: 'body' })
+              ]}
+            >
               Clear all routine data and workout logs while preserving your exercise menu.
             </Text>
             <Button
               mode="contained"
               onPress={handleRestoreToDefault}
-              style={styles.restoreButton}
+              style={[styles.restoreButton, retroButtonStyle]}
               buttonColor={theme.colors.error}
               textColor="#fff"
+              labelStyle={isRetro ? { fontWeight: '700', fontSize: 15 } : {}}
             >
               Restore to Default
             </Button>
@@ -98,8 +158,6 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: Spacing.md,
-    borderRadius: 12,
-    elevation: 2,
   },
   cardTitle: {
     fontWeight: 'bold',

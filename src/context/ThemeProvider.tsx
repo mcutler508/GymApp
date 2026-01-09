@@ -1,15 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useColorScheme, View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LightTheme, DarkTheme, Theme, ThemeMode } from '../constants/theme';
+import { LightTheme, DarkTheme, RetroTheme, Theme, ThemeMode } from '../constants/theme';
 
 interface ThemeContextType {
   theme: Theme;
   mode: ThemeMode;
-  resolvedMode: 'light' | 'dark';
   setMode: (mode: ThemeMode) => void;
-  isSystem: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -17,8 +15,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = 'ui.theme';
 
 // Convert our theme to Paper MD3 theme
-const toPaperTheme = (theme: Theme, isDark: boolean) => {
-  const baseTheme = isDark ? MD3DarkTheme : MD3LightTheme;
+const toPaperTheme = (theme: Theme, mode: ThemeMode) => {
+  const baseTheme = mode === 'dark' ? MD3DarkTheme : MD3LightTheme;
   return {
     ...baseTheme,
     colors: {
@@ -42,16 +40,14 @@ const toPaperTheme = (theme: Theme, isDark: boolean) => {
 };
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const systemColorScheme = useColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('light');
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Resolve the actual theme mode
-  const resolvedMode: 'light' | 'dark' = 
-    mode === 'system' ? (systemColorScheme ?? 'light') : mode;
-  
-  const theme = resolvedMode === 'dark' ? DarkTheme : LightTheme;
-  const isSystem = mode === 'system';
+  // Resolve the theme based on mode
+  const theme =
+    mode === 'dark' ? DarkTheme :
+    mode === 'retro' ? RetroTheme :
+    LightTheme;
 
   // Load persisted theme preference
   useEffect(() => {
@@ -60,7 +56,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
         if (stored) {
           const parsed = stored as ThemeMode;
-          if (parsed === 'light' || parsed === 'dark' || parsed === 'system') {
+          if (parsed === 'light' || parsed === 'dark' || parsed === 'retro') {
             setModeState(parsed);
           }
         }
@@ -86,9 +82,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const value: ThemeContextType = {
     theme,
     mode,
-    resolvedMode,
     setMode,
-    isSystem,
   };
 
   // Show loading indicator while theme is being loaded
@@ -102,7 +96,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      <PaperProvider theme={toPaperTheme(theme, resolvedMode === 'dark')}>
+      <PaperProvider theme={toPaperTheme(theme, mode)}>
         {children}
       </PaperProvider>
     </ThemeContext.Provider>
