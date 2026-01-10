@@ -11,6 +11,7 @@ import WorkoutTimer from '../components/WorkoutTimer';
 import WeightSlider from '../components/WeightSlider';
 import RepSlider from '../components/RepSlider';
 import { useTheme } from '../context/ThemeProvider';
+import DifficultyIcon from '../components/DifficultyIcon';
 
 type ActiveWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveWorkout'>;
 type ActiveWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveWorkout'>;
@@ -200,12 +201,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
                 onPress={() => handleDifficultySelection('easy')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    😊
-                  </Text>
-                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
-                    Easy
-                  </Text>
+                  <DifficultyIcon level="easy" size={125} />
                   <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     +10% weight
                   </Text>
@@ -217,12 +213,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
                 onPress={() => handleDifficultySelection('normal')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    💪
-                  </Text>
-                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
-                    Normal
-                  </Text>
+                  <DifficultyIcon level="normal" size={125} />
                   <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     +5% weight
                   </Text>
@@ -236,12 +227,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
                 onPress={() => handleDifficultySelection('hard')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    😅
-                  </Text>
-                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
-                    Hard
-                  </Text>
+                  <DifficultyIcon level="hard" size={125} />
                   <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     Same weight
                   </Text>
@@ -253,12 +239,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: Props) {
                 onPress={() => handleDifficultySelection('expert')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    🔥
-                  </Text>
-                  <Text variant="titleLarge" style={[styles.difficultyText, { color: theme.colors.text }]}>
-                    Expert
-                  </Text>
+                  <DifficultyIcon level="expert" size={125} />
                   <Text variant="bodySmall" style={[styles.difficultyDesc, { color: theme.colors.textSecondary }]}>
                     -5% weight
                   </Text>
@@ -422,18 +403,13 @@ const styles = StyleSheet.create({
   },
   difficultyContent: {
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
-  },
-  difficultyEmoji: {
-    fontSize: 40,
-    marginBottom: Spacing.sm,
-  },
-  difficultyText: {
-    fontWeight: 'bold',
-    marginBottom: Spacing.xs,
+    justifyContent: 'center',
+    paddingVertical: Spacing.xl,
+    minHeight: 160,
   },
   difficultyDesc: {
-    fontSize: 12,
+    fontSize: 11,
+    marginTop: Spacing.md,
   },
   easyCard: {
     borderWidth: 2,

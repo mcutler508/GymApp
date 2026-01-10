@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import WorkoutTimer from '../components/WorkoutTimer';
 import WeightSlider from '../components/WeightSlider';
 import RepSlider from '../components/RepSlider';
+import DifficultyIcon from '../components/DifficultyIcon';
 
 type ActiveRoutineWorkoutScreenRouteProp = RouteProp<RootStackParamList, 'ActiveRoutineWorkout'>;
 type ActiveRoutineWorkoutScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ActiveRoutineWorkout'>;
@@ -542,12 +543,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 onPress={() => handleDifficultySelection('easy')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    😊
-                  </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
-                    Easy
-                  </Text>
+                  <DifficultyIcon level="easy" size={125} />
                   <Text variant="bodySmall" style={styles.difficultyDesc}>
                     +10% weight
                   </Text>
@@ -559,12 +555,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 onPress={() => handleDifficultySelection('normal')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    💪
-                  </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
-                    Normal
-                  </Text>
+                  <DifficultyIcon level="normal" size={125} />
                   <Text variant="bodySmall" style={styles.difficultyDesc}>
                     +5% weight
                   </Text>
@@ -578,12 +569,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 onPress={() => handleDifficultySelection('hard')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    😅
-                  </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
-                    Hard
-                  </Text>
+                  <DifficultyIcon level="hard" size={125} />
                   <Text variant="bodySmall" style={styles.difficultyDesc}>
                     Same weight
                   </Text>
@@ -595,12 +581,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 onPress={() => handleDifficultySelection('expert')}
               >
                 <Card.Content style={styles.difficultyContent}>
-                  <Text variant="headlineSmall" style={styles.difficultyEmoji}>
-                    🔥
-                  </Text>
-                  <Text variant="titleLarge" style={styles.difficultyText}>
-                    Expert
-                  </Text>
+                  <DifficultyIcon level="expert" size={125} />
                   <Text variant="bodySmall" style={styles.difficultyDesc}>
                     -5% weight
                   </Text>
@@ -916,20 +897,14 @@ const getStyles = (theme: any) => StyleSheet.create({
   },
   difficultyContent: {
     alignItems: 'center',
-    paddingVertical: Spacing.lg,
-  },
-  difficultyEmoji: {
-    fontSize: 40,
-    marginBottom: Spacing.sm,
-  },
-  difficultyText: {
-    fontWeight: 'bold',
-    marginBottom: Spacing.xs,
-    color: theme.colors.text,
+    justifyContent: 'center',
+    paddingVertical: Spacing.xl,
+    minHeight: 160,
   },
   difficultyDesc: {
     color: theme.colors.textSecondary,
-    fontSize: 12,
+    fontSize: 11,
+    marginTop: Spacing.md,
   },
   easyCard: {
     backgroundColor: theme.colors.card,
