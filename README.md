@@ -43,11 +43,18 @@ npm install
 1. Create a Supabase account at https://supabase.com
 2. Create a new project
 3. Copy your project URL and anon key from Project Settings > API
-4. Update `src/services/supabase.ts` with your credentials:
-```typescript
-const SUPABASE_URL = 'your-project-url';
-const SUPABASE_ANON_KEY = 'your-anon-key';
-```
+4. Create a `.env` file in the project root:
+   - **Linux/macOS**: `cp .env.example .env`
+   - **Windows (PowerShell)**: `Copy-Item .env.example .env`
+   - **Windows (CMD)**: `copy .env.example .env`
+   
+   Then edit `.env` and replace the placeholder values with your actual credentials:
+   ```
+   EXPO_PUBLIC_SUPABASE_URL=your-project-url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+   **Important**: After creating or modifying the `.env` file, restart your Expo development server for changes to take effect.
 
 5. Create the following tables in your Supabase database:
 
