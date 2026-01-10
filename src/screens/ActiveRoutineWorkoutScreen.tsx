@@ -336,7 +336,16 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
       Alert.alert(
         'Workout Complete!',
         `Great job! You completed ${routine.name}.`,
-        [{ text: 'OK', onPress: () => navigation.navigate('RoutinesList') }]
+        [{ 
+          text: 'OK', 
+          onPress: () => {
+            // Reset navigation stack to RoutinesList to prevent back button from going to completed workout
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'RoutinesList' }],
+            });
+          }
+        }]
       );
     }
   };
@@ -460,10 +469,13 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 // Continue navigation even if this fails - timing is still saved
               }
 
-              // Navigate back to RoutinesList screen
+              // Reset navigation stack to RoutinesList to prevent back button from going to ended workout
               // Use requestAnimationFrame to ensure navigation happens after state updates
               requestAnimationFrame(() => {
-                navigation.navigate('RoutinesList');
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'RoutinesList' }],
+                });
               });
             } catch (error) {
               console.error('Error ending routine:', error);

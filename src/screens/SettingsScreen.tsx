@@ -4,6 +4,7 @@ import { Text, Card, Button } from 'react-native-paper';
 import { Spacing } from '../constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeProvider';
+import { useAuth } from '../context/AuthProvider';
 import { getRetroCardStyle, getRetroButtonStyle, getRetroTextStyle } from '../utils/retroStyles';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -13,7 +14,35 @@ const WORKOUT_HISTORY_KEY = 'workoutHistory';
 
 export default function SettingsScreen() {
   const { theme, mode } = useTheme();
+  const { signOut } = useAuth();
   const isRetro = mode === 'retro';
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              // Navigation to login screen is handled automatically by AppNavigator
+              // when session becomes null
+            } catch (error) {
+              console.error('Error signing out:', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleRestoreToDefault = () => {
     Alert.alert(
@@ -95,6 +124,48 @@ export default function SettingsScreen() {
           </Card.Content>
         </Card>
 
+        {/* Account Card */}
+        <Card
+          style={[
+            styles.card,
+            { backgroundColor: theme.colors.card },
+            retroCardStyle
+          ]}
+        >
+          <Card.Content>
+            <Text
+              variant="titleMedium"
+              style={[
+                styles.cardTitle,
+                { color: theme.colors.text },
+                getRetroTextStyle({ isRetro, variant: 'title' })
+              ]}
+            >
+              Account
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[
+                styles.cardDescription,
+                { color: theme.colors.textSecondary },
+                getRetroTextStyle({ isRetro, variant: 'body' })
+              ]}
+            >
+              Sign out of your account.
+            </Text>
+            <Button
+              mode="contained"
+              onPress={handleSignOut}
+              style={[styles.signOutButton, retroButtonStyle]}
+              buttonColor={theme.colors.error}
+              textColor="#fff"
+              labelStyle={isRetro ? { fontWeight: '700', fontSize: 15 } : {}}
+            >
+              Sign Out
+            </Button>
+          </Card.Content>
+        </Card>
+
         {/* Data Management Card */}
         <Card
           style={[
@@ -168,6 +239,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   restoreButton: {
+    marginTop: Spacing.xs,
+  },
+  signOutButton: {
     marginTop: Spacing.xs,
   },
 });

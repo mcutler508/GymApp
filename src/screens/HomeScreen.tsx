@@ -230,7 +230,9 @@ export default function HomeScreen() {
   };
 
   const handleStartRoutine = (routine: Routine) => {
-    navigation.navigate('ActiveRoutineWorkout', { routineId: routine.id });
+    // Navigate to Routines tab so user can start workout from there
+    // This keeps workout starting centralized in the Routines tab
+    navigation.getParent()?.navigate('Routines');
   };
 
   const maxActivity = Math.max(...weekActivity.map(d => d.count), 1);

@@ -61,11 +61,6 @@ function HomeStack() {
         component={HomeScreen}
         options={{ title: 'Home' }}
       />
-      <Stack.Screen
-        name="ActiveRoutineWorkout"
-        component={ActiveRoutineWorkoutScreen}
-        options={{ title: 'Active Workout' }}
-      />
     </Stack.Navigator>
   );
 }
@@ -117,7 +112,10 @@ function RoutinesStack() {
       <Stack.Screen
         name="RoutinesList"
         component={RoutinesScreen}
-        options={{ title: 'Routines' }}
+        options={{ 
+          title: 'Routines',
+          headerBackVisible: false, // No back button on root screen
+        }}
       />
       <Stack.Screen
         name="RoutineBuilder"
