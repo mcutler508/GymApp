@@ -335,7 +335,7 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
       Alert.alert(
         'Workout Complete!',
         `Great job! You completed ${routine.name}.`,
-        [{ text: 'OK', onPress: () => navigation.navigate('Routines') }]
+        [{ text: 'OK', onPress: () => navigation.navigate('RoutinesList') }]
       );
     }
   };
@@ -412,34 +412,43 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
           text: 'End Workout',
           style: 'destructive',
           onPress: async () => {
-            // Calculate session duration
-            const sessionEndTime = Date.now();
-            const totalSessionDuration = Math.floor((sessionEndTime - sessionStartTime) / 1000);
-
-            // Update all logs in this session with session timing
             try {
-              const logsString = await AsyncStorage.getItem('workoutLogs');
-              if (logsString) {
-                const logs = JSON.parse(logsString);
-                const updatedLogs = logs.map((log: any) => {
-                  if (log.sessionId === sessionId) {
-                    return {
-                      ...log,
-                      sessionStartTime: new Date(sessionStartTime).toISOString(),
-                      sessionEndTime: new Date(sessionEndTime).toISOString(),
-                      sessionDuration: totalSessionDuration,
-                    };
-                  }
-                  return log;
-                });
-                await AsyncStorage.setItem('workoutLogs', JSON.stringify(updatedLogs));
-              }
-            } catch (error) {
-              console.error('Error updating session timing:', error);
-            }
+              // Calculate session duration
+              const sessionEndTime = Date.now();
+              const totalSessionDuration = Math.floor((sessionEndTime - sessionStartTime) / 1000);
 
-            // Navigate back to Routines screen
-            navigation.navigate('Routines');
+              // Update all logs in this session with session timing
+              try {
+                const logsString = await AsyncStorage.getItem('workoutLogs');
+                if (logsString) {
+                  const logs = JSON.parse(logsString);
+                  const updatedLogs = logs.map((log: any) => {
+                    if (log.sessionId === sessionId) {
+                      return {
+                        ...log,
+                        sessionStartTime: new Date(sessionStartTime).toISOString(),
+                        sessionEndTime: new Date(sessionEndTime).toISOString(),
+                        sessionDuration: totalSessionDuration,
+                      };
+                    }
+                    return log;
+                  });
+                  await AsyncStorage.setItem('workoutLogs', JSON.stringify(updatedLogs));
+                }
+              } catch (error) {
+                console.error('Error updating session timing:', error);
+                // Continue navigation even if this fails - data is still saved
+              }
+
+              // Navigate back to RoutinesList screen
+              // Use requestAnimationFrame to ensure navigation happens after state updates
+              requestAnimationFrame(() => {
+                navigation.navigate('RoutinesList');
+              });
+            } catch (error) {
+              console.error('Error ending routine:', error);
+              Alert.alert('Error', 'Failed to end workout. Please try again.');
+            }
           },
         },
       ]
