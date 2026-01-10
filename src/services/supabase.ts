@@ -1,10 +1,9 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 
-// TODO: Replace with your Supabase project credentials
-// You can find these in your Supabase project settings
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// Supabase project credentials
+const SUPABASE_URL = 'https://xrmhzpuiacziggvejtxp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhybWh6cHVpYWN6aWdndmVqdHhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5OTA5NzQsImV4cCI6MjA4MzU2Njk3NH0.yK-cbfxrvoXKqZuafYGn4tV00Od5f5TrYnDW62bhhB0';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {

@@ -5,6 +5,17 @@ export interface User {
   created_at: string;
 }
 
+export interface UserProfile {
+  id: string; // References auth.users(id)
+  display_name?: string;
+  avatar_url?: string;
+  height_cm?: number;
+  weight_kg?: number;
+  preferred_units?: 'kg' | 'lbs';
+  created_at: string;
+  updated_at: string;
+}
+
 // Exercise types
 export interface Exercise {
   id: string;
