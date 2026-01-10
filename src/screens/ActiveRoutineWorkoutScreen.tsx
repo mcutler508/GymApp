@@ -440,6 +440,25 @@ export default function ActiveRoutineWorkoutScreen({ route, navigation }: Props)
                 // Continue navigation even if this fails - data is still saved
               }
 
+              // Mark routine as complete (even if not all exercises were completed)
+              try {
+                const stored = await AsyncStorage.getItem(ROUTINES_STORAGE_KEY);
+                if (stored) {
+                  const routines: Routine[] = JSON.parse(stored);
+                  const routineIndex = routines.findIndex((r) => r.id === routineId);
+                  if (routineIndex !== -1) {
+                    routines[routineIndex] = {
+                      ...routines[routineIndex],
+                      completed: true,
+                    };
+                    await AsyncStorage.setItem(ROUTINES_STORAGE_KEY, JSON.stringify(routines));
+                  }
+                }
+              } catch (error) {
+                console.error('Error marking routine as complete:', error);
+                // Continue navigation even if this fails - timing is still saved
+              }
+
               // Navigate back to RoutinesList screen
               // Use requestAnimationFrame to ensure navigation happens after state updates
               requestAnimationFrame(() => {

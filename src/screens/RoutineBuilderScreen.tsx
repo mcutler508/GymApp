@@ -421,8 +421,31 @@ export default function RoutineBuilderScreen({ route, navigation }: Props) {
       <Portal>
         <Dialog visible={showWeightDialog} onDismiss={() => setShowWeightDialog(false)}>
           <Dialog.Title>Set Starting Weight</Dialog.Title>
-          <Dialog.Content>
-            <Text variant="bodyMedium" style={[styles.dialogSubtitle, { color: theme.colors.textSecondary }]}>
+          <Dialog.Content style={{ paddingTop: 0 }}>
+            <Text 
+              variant="bodyMedium" 
+              style={[
+                { 
+                  color: theme.colors.textSecondary, 
+                  marginTop: 0,
+                  marginBottom: Spacing.sm,
+                  fontSize: 13,
+                  fontStyle: 'italic'
+                }
+              ]}
+            >
+              (For bodyweight exercises, use your bodyweight!)
+            </Text>
+            <Text 
+              variant="titleMedium" 
+              style={[
+                { 
+                  color: theme.colors.text, 
+                  marginBottom: Spacing.md,
+                  fontWeight: '600'
+                }
+              ]}
+            >
               {selectedExerciseToAdd?.name}
             </Text>
             <WeightSlider
